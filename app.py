@@ -300,7 +300,7 @@ def generate_calendar_invite(event, location, registration, is_update=False):
         # Add to calendar
         cal.events.add(ics_event)
         
-        calendar_string = str(cal)
+        calendar_string = cal.serialize()
         print(f"[INFO] Generated calendar invite for {registration.name} - {event.walk_date}")
         return calendar_string
     except Exception as e:
