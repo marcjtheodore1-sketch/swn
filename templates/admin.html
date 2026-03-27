@@ -52,7 +52,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     {% for event in events %}
-                    {% set location = event_data.location %}
+                    {% set location = locations | selectattr('id', 'equalto', event.location_id) | first %}
                     <tr>
                         <td class="py-4 px-6">
                             <div class="font-medium text-gray-800">{{ event.walk_date.strftime('%-d %b %Y') }}</div>
