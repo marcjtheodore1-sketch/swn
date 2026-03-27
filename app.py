@@ -264,7 +264,8 @@ def generate_calendar_invite(event, location, registration, is_update=False):
         description_parts.append("- Water bottle")
         description_parts.append("- Weather-appropriate clothing")
         description_parts.append("- Money for breaktime drinks/snacks")
-        description_parts.append("- Phone (for WhatsApp group)")
+        description_parts.append("- Phone (essential - especially if you have consented to the WhatsApp group)")
+        description_parts.append("- Any sensory items you wish to bring")
         
         ics_event.description = "\n".join(description_parts)
         
@@ -326,7 +327,7 @@ def send_registration_confirmation(registration):
     
     body = f"""Hello {registration.name},
 
-Thank you for registering for the Strolling with Neurokin walk!
+Thank you for registering for the Strolling with Neurokin walk, organised by the London Autism Group Charity.
 
 WALK DETAILS:
 Location: {location['name']}
@@ -340,7 +341,8 @@ WHAT TO BRING:
 - Water bottle
 - Weather-appropriate clothing
 - Money for breaktime drinks/snacks
-- Phone (for WhatsApp group if you consented)
+- Phone (essential - especially if you have consented to the WhatsApp group)
+- Any sensory items you wish to bring
 
 MANAGE YOUR BOOKING:
 You can view or cancel your booking at any time:
@@ -365,7 +367,7 @@ London Autism Group Charity
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
         <h2 style="color: #6B46C1;">Hello {registration.name},</h2>
         
-        <p>Thank you for registering for the <strong>Strolling with Neurokin</strong> walk!</p>
+        <p>Thank you for registering for the <strong>Strolling with Neurokin</strong> walk, organised by the <strong>London Autism Group Charity</strong>.</p>
         
         <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #6B46C1; margin-top: 0;">WALK DETAILS</h3>
@@ -382,7 +384,8 @@ London Autism Group Charity
             <li>Water bottle</li>
             <li>Weather-appropriate clothing</li>
             <li>Money for breaktime drinks/snacks</li>
-            <li>Phone (for WhatsApp group if you consented)</li>
+            <li>Phone (essential - especially if you have consented to the WhatsApp group)</li>
+            <li>Any sensory items you wish to bring</li>
         </ul>
         
         <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
