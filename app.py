@@ -906,6 +906,80 @@ def admin_edit_walk(event_id):
         location=location
     )
 
+@app.route('/admin/event/<event_id>/registrations')
+@admin_required
+def admin_event_registrations(event_id):
+    """View registrations for a specific event"""
+    event = WalkEvent.query.get_or_404(event_id)
+    location = next((l for l in WALK_LOCATIONS if l['id'] == event.location_id), None)
+    
+    # Get all active registrations for this event
+    registrations = Registration.query.filter_by(
+        event_id=event.id,
+        cancelled_at=None
+    ).order_by(Registration.created_at.desc()).all()
+    
+    return render_template(
+        'admin_event_registrations.html',
+        event=event,
+        location=location,
+        registrations=registrations
+    )
+
+@app.route('/admin/event/<event_id>/registrations.csv')
+@admin_required
+def admin_event_registrations_csv(event_id):
+    """Download registrations for a specific event as CSV"""
+    import csv
+    import io
+    from flask import Response
+    
+    event = WalkEvent.query.get_or_404(event_id)
+    location = next((l for l in WALK_LOCATIONS if l['id'] == event.location_id), None)
+    
+    # Get all active registrations for this event
+    registrations = Registration.query.filter_by(
+        event_id=event.id,
+        cancelled_at=None
+    ).order_by(Registration.created_at.desc()).all()
+    
+    # Create CSV
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header row
+    writer.writerow([
+        'Name', 'Email', 'Phone', 'Attending With', 
+        'Access Needs', 'Dietary Needs', 'Additional Info',
+        'WhatsApp Consent', 'Registered At'
+    ])
+    
+    # Data rows
+    for reg in registrations:
+        writer.writerow([
+            reg.name,
+            reg.email,
+            reg.phone,
+            reg.attending_with or '',
+            reg.access_needs or '',
+            reg.dietary_needs or '',
+            reg.additional_info or '',
+            'Yes' if reg.whatsapp_consent else 'No',
+            reg.created_at.strftime('%Y-%m-%d %H:%M') if reg.created_at else ''
+        ])
+    
+    # Generate filename
+    filename = f"registrations-{location['id']}-{event.walk_date.strftime('%Y%m%d')}.csv"
+    
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={
+            'Content-Disposition': f'attachment; filename={filename}'
+        }
+    )
+
 # ============================================================================
 # INITIALIZATION
 # ============================================================================

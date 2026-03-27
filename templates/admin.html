@@ -77,10 +77,16 @@
                             </span>
                         </td>
                         <td class="py-4 px-6">
-                            <a href="{{ url_for('admin_edit_walk', event_id=event.id) }}" 
-                               class="inline-flex items-center px-3 py-1 bg-swn-purple text-white text-sm rounded hover:bg-opacity-90">
-                                {% if event.meet_when_where %}Edit{% else %}Add Details{% endif %}
-                            </a>
+                            <div class="flex gap-2">
+                                <a href="{{ url_for('admin_event_registrations', event_id=event.id) }}" 
+                                   class="inline-flex items-center px-3 py-1 bg-swn-teal text-white text-sm rounded hover:bg-opacity-90">
+                                    View {{ event.registered_count }} Registered
+                                </a>
+                                <a href="{{ url_for('admin_edit_walk', event_id=event.id) }}" 
+                                   class="inline-flex items-center px-3 py-1 bg-swn-purple text-white text-sm rounded hover:bg-opacity-90">
+                                    {% if event.meet_when_where %}Edit{% else %}Add Details{% endif %}
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -89,85 +95,50 @@
         </div>
     </div>
 
-    <!-- Registrations Grouped by Event -->
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">Registrations by Walk</h2>
+    <!-- Quick Summary -->
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Registration Summary</h2>
     
     {% if not registrations %}
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-gray-500">
         No registrations found.
     </div>
-    {% endif %}
-    
-    {% for event_id, event_data in registrations_by_event.items() %}
-    {% set location = event_data.location %}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-        <!-- Event Header -->
-        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-800">
-                        {{ location.name }} — {{ event_data.event.walk_date.strftime('%A, %-d %B %Y') }}
-                    </h3>
-                    <p class="text-sm text-gray-600">
-                        {{ event_data.event.start_time }} - {{ event_data.event.end_time }} 
-                        <span class="mx-2">|</span>
-                        <span class="font-semibold text-swn-purple">{{ event_data.registrations | length }}</span> registered
-                    </p>
-                </div>
-                <a href="{{ url_for('admin_edit_walk', event_id=event_data.event.id) }}" 
-                   class="inline-flex items-center px-3 py-1.5 bg-swn-purple text-white text-sm rounded hover:bg-opacity-90">
-                    {% if event_data.event.meet_when_where %}Edit Details{% else %}Add Walk Details{% endif %}
-                </a>
-            </div>
-        </div>
-        
-        <!-- Registrations Table for this Event -->
+    {% else %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-gray-100 border-b border-gray-200">
+                <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="text-left py-3 px-6 font-semibold text-gray-700 text-sm">Name</th>
-                        <th class="text-left py-3 px-6 font-semibold text-gray-700 text-sm">Contact</th>
-                        <th class="text-left py-3 px-6 font-semibold text-gray-700 text-sm">Details</th>
-                        <th class="text-left py-3 px-6 font-semibold text-gray-700 text-sm">WhatsApp</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Walk</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Date</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Registered</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    {% for reg in event_data.registrations %}
+                    {% for event_id, event_data in registrations_by_event.items() %}
+                    {% set location = event_data.location %}
                     <tr class="hover:bg-gray-50">
-                        <td class="py-3 px-6">
-                            <div class="font-medium text-gray-800">{{ reg.name }}</div>
+                        <td class="py-4 px-6">
+                            <span class="font-medium text-gray-800">{{ location.name }}</span>
                         </td>
-                        <td class="py-3 px-6">
-                            <div class="text-sm text-gray-600">{{ reg.email }}</div>
-                            <div class="text-sm text-gray-500">{{ reg.phone }}</div>
+                        <td class="py-4 px-6 text-gray-600">
+                            {{ event_data.event.walk_date.strftime('%A, %-d %b %Y') }}
                         </td>
-                        <td class="py-3 px-6">
-                            <div class="text-sm space-y-1">
-                                {% if reg.attending_with %}
-                                <div class="text-green-600">👥 With: {{ reg.attending_with }}</div>
-                                {% endif %}
-                                {% if reg.dietary_needs %}
-                                <div class="text-orange-600">🍽️ {{ reg.dietary_needs }}</div>
-                                {% endif %}
-                                {% if reg.access_needs %}
-                                <div class="text-blue-600">♿ {{ reg.access_needs }}</div>
-                                {% endif %}
-                                {% if reg.additional_info %}
-                                <div class="text-purple-600">📝 {{ reg.additional_info }}</div>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td class="py-3 px-6">
-                            {% if reg.whatsapp_consent %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Yes
+                        <td class="py-4 px-6">
+                            <span class="font-semibold {{ 'text-red-600' if event_data.registrations | length >= event_data.event.max_participants else 'text-swn-purple' }}">
+                                {{ event_data.registrations | length }}
                             </span>
-                            {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                No
-                            </span>
-                            {% endif %}
+                            <span class="text-gray-500"> / {{ event_data.event.max_participants }}</span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <a href="{{ url_for('admin_event_registrations', event_id=event_data.event.id) }}" 
+                               class="inline-flex items-center px-3 py-1.5 bg-swn-teal text-white text-sm rounded hover:bg-opacity-90 mr-2">
+                                View List
+                            </a>
+                            <a href="{{ url_for('admin_event_registrations_csv', event_id=event_data.event.id) }}" 
+                               class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                                📥 CSV
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -175,6 +146,6 @@
             </table>
         </div>
     </div>
-    {% endfor %}
+    {% endif %}
 </div>
 {% endblock %}
