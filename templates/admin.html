@@ -99,7 +99,7 @@
     {% endif %}
     
     {% for event_id, event_data in registrations_by_event.items() %}
-    {% set location = locations | selectattr('id', 'equalto', event.location_id) | first %}
+    {% set location = event_data.location %}
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
         <!-- Event Header -->
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
