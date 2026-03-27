@@ -479,6 +479,8 @@ Date: {registration.event.walk_date.strftime('%A, %d %B %Y')}
 Time: {registration.event.start_time} - {registration.event.end_time}
 Walk Leader: {location['facilitator']}
 {note_section}
+📅 Please remove this event from your calendar as it has now been cancelled.
+
 If you believe this was cancelled in error, or if you have any questions, please contact us at londonautismgroupcharity@gmail.com
 
 You can view your other bookings at:
@@ -505,12 +507,81 @@ London Autism Group Charity
             {f"<p style='margin-top: 10px;'><strong>Additional note:</strong> {admin_note}</p>" if admin_note else ""}
         </div>
         
+        <div style="background: #fff7ed; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;">
+            <p style="margin: 0;"><strong>📅 Please remove this event from your calendar</strong> as it has now been cancelled.</p>
+        </div>
+        
         <p>If you believe this was cancelled in error, or if you have any questions, please contact us at <a href="mailto:londonautismgroupcharity@gmail.com">londonautismgroupcharity@gmail.com</a></p>
         
         <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #2e7d32; margin-top: 0;">VIEW YOUR OTHER BOOKINGS</h3>
             <a href="{my_bookings_url}" style="display: inline-block; background: #6B46C1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">My Bookings</a>
         </div>
+        
+        <p>Best regards,<br>
+        <strong>Strolling with Neurokin Team</strong><br>
+        London Autism Group Charity</p>
+    </body>
+    </html>
+    """
+    
+    return send_email(registration.email, subject, body, html_body)
+
+def send_user_cancellation_confirmation(registration):
+    """Send confirmation to user when they cancel their own registration"""
+    location = next((l for l in WALK_LOCATIONS if l['id'] == registration.event.location_id), None)
+    
+    subject = f"Strolling with Neurokin - Registration Cancelled ({location['name']})"
+    
+    my_bookings_url = url_for('my_bookings', _external=True)
+    
+    body = f"""Hello {registration.name},
+
+Your registration for the Strolling with Neurokin walk has been cancelled.
+
+CANCELLED REGISTRATION:
+Location: {location['name']}
+Date: {registration.event.walk_date.strftime('%A, %d %B %Y')}
+Time: {registration.event.start_time} - {registration.event.end_time}
+Walk Leader: {location['facilitator']}
+
+📅 Please remove this event from your calendar as it has now been cancelled.
+
+You can view your other bookings at:
+{my_bookings_url}
+
+If you have any questions, please contact us at londonautismgroupcharity@gmail.com
+
+Best regards,
+Strolling with Neurokin Team
+London Autism Group Charity
+"""
+    
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #6B46C1;">Hello {registration.name},</h2>
+        
+        <p>Your registration for the <strong>Strolling with Neurokin</strong> walk has been <strong>cancelled</strong>.</p>
+        
+        <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+            <h3 style="color: #dc2626; margin-top: 0;">CANCELLED REGISTRATION</h3>
+            <p><strong>Location:</strong> {location['name']}</p>
+            <p><strong>Date:</strong> {registration.event.walk_date.strftime('%A, %d %B %Y')}</p>
+            <p><strong>Time:</strong> {registration.event.start_time} - {registration.event.end_time}</p>
+            <p><strong>Walk Leader:</strong> {location['facilitator']}</p>
+        </div>
+        
+        <div style="background: #fff7ed; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;">
+            <p style="margin: 0;"><strong>📅 Please remove this event from your calendar</strong> as it has now been cancelled.</p>
+        </div>
+        
+        <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #0369a1; margin-top: 0;">VIEW YOUR OTHER BOOKINGS</h3>
+            <a href="{my_bookings_url}" style="display: inline-block; background: #6B46C1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">My Bookings</a>
+        </div>
+        
+        <p>If you have any questions, please contact us at <a href="mailto:londonautismgroupcharity@gmail.com">londonautismgroupcharity@gmail.com</a></p>
         
         <p>Best regards,<br>
         <strong>Strolling with Neurokin Team</strong><br>
@@ -859,6 +930,12 @@ def cancel_registration(token):
     
     # Send admin notification
     send_admin_notification(registration, 'cancelled')
+    
+    # Send confirmation email to user with calendar removal note
+    try:
+        send_user_cancellation_confirmation(registration)
+    except Exception as e:
+        print(f"[ERROR] Failed to send user cancellation confirmation: {e}")
     
     flash('Your registration has been cancelled successfully', 'success')
     return redirect(url_for('landing'))
