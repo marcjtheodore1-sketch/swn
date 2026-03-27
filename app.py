@@ -96,6 +96,10 @@ class WalkEvent(db.Model):
     finish_details = db.Column(db.Text, nullable=True)  # When and where it finishes
     visual_story_url = db.Column(db.String(500), nullable=True)  # Link to visual story (optional)
     
+    # Walk leader notification preferences
+    notify_leader = db.Column(db.Boolean, default=False)  # Whether to notify walk leader of new registrations
+    leader_email = db.Column(db.String(120), nullable=True)  # Walk leader email for notifications
+    
     @property
     def full_description(self):
         """Generate full description from walk details"""
@@ -460,7 +464,19 @@ View admin dashboard:
 https://swn-londonautismgroupcharity.pythonanywhere.com/admin
 """
     
-    return send_email(app.config['ADMIN_EMAIL'], subject, body)
+    # Send to main admin email
+    result = send_email(app.config['ADMIN_EMAIL'], subject, body)
+    
+    # Also send to walk leader if they've opted in and have a valid email
+    if registration.event.notify_leader and registration.event.leader_email:
+        try:
+            # Add a note that this is a copy for the walk leader
+            leader_body = body + f"\n\n---\nThis is a copy of the registration notification for your walk at {location['name']}.\nYou can manage your walk details at: https://swn-londonautismgroupcharity.pythonanywhere.com/admin\n"
+            send_email(registration.event.leader_email, subject, leader_body)
+        except Exception as e:
+            print(f"[ERROR] Failed to send notification to walk leader: {e}")
+    
+    return result
 
 def send_admin_cancellation_notification(registration, admin_note=''):
     """Send notification to user when admin cancels their registration"""
@@ -1049,6 +1065,16 @@ def admin_edit_walk(event_id):
         if new_visual_story_url != event.visual_story_url:
             updated_fields.append('visual_story_url')
             event.visual_story_url = new_visual_story_url
+        
+        # Handle walk leader notification preferences
+        new_notify_leader = request.form.get('notify_leader') == 'on'
+        new_leader_email = request.form.get('leader_email', '').strip()
+        
+        if new_notify_leader != event.notify_leader:
+            event.notify_leader = new_notify_leader
+        
+        if new_leader_email != event.leader_email:
+            event.leader_email = new_leader_email
         
         # Also update the meeting_point with the full description for display
         event.meeting_point = event.full_description
