@@ -429,6 +429,68 @@ https://swn-londonautismgroupcharity.pythonanywhere.com/admin
     
     return send_email(app.config['ADMIN_EMAIL'], subject, body)
 
+def send_admin_cancellation_notification(registration, admin_note=''):
+    """Send notification to user when admin cancels their registration"""
+    location = next((l for l in WALK_LOCATIONS if l['id'] == registration.event.location_id), None)
+    
+    subject = f"Strolling with Neurokin - Registration Cancelled ({location['name']})"
+    
+    my_bookings_url = url_for('my_bookings', _external=True)
+    
+    note_section = f"\nAdditional note: {admin_note}\n" if admin_note else ""
+    
+    body = f"""Hello {registration.name},
+
+Your registration for the Strolling with Neurokin walk has been cancelled by the walk leader.
+
+CANCELLED REGISTRATION:
+Location: {location['name']}
+Date: {registration.event.walk_date.strftime('%A, %d %B %Y')}
+Time: {registration.event.start_time} - {registration.event.end_time}
+Walk Leader: {location['facilitator']}
+{note_section}
+If you believe this was cancelled in error, or if you have any questions, please contact us at londonautismgroupcharity@gmail.com
+
+You can view your other bookings at:
+{my_bookings_url}
+
+Best regards,
+Strolling with Neurokin Team
+London Autism Group Charity
+"""
+    
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #6B46C1;">Hello {registration.name},</h2>
+        
+        <p>Your registration for the <strong>Strolling with Neurokin</strong> walk has been <strong>cancelled</strong> by the walk leader.</p>
+        
+        <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+            <h3 style="color: #dc2626; margin-top: 0;">CANCELLED REGISTRATION</h3>
+            <p><strong>Location:</strong> {location['name']}</p>
+            <p><strong>Date:</strong> {registration.event.walk_date.strftime('%A, %d %B %Y')}</p>
+            <p><strong>Time:</strong> {registration.event.start_time} - {registration.event.end_time}</p>
+            <p><strong>Walk Leader:</strong> {location['facilitator']}</p>
+            {f"<p style='margin-top: 10px;'><strong>Additional note:</strong> {admin_note}</p>" if admin_note else ""}
+        </div>
+        
+        <p>If you believe this was cancelled in error, or if you have any questions, please contact us at <a href="mailto:londonautismgroupcharity@gmail.com">londonautismgroupcharity@gmail.com</a></p>
+        
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #2e7d32; margin-top: 0;">VIEW YOUR OTHER BOOKINGS</h3>
+            <a href="{my_bookings_url}" style="display: inline-block; background: #6B46C1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">My Bookings</a>
+        </div>
+        
+        <p>Best regards,<br>
+        <strong>Strolling with Neurokin Team</strong><br>
+        London Autism Group Charity</p>
+    </body>
+    </html>
+    """
+    
+    return send_email(registration.email, subject, body, html_body)
+
 def send_update_notifications(event, updated_fields):
     """Send updated calendar invites to all registered participants when walk details change"""
     location = next((l for l in WALK_LOCATIONS if l['id'] == event.location_id), None)
@@ -979,6 +1041,42 @@ def admin_event_registrations_csv(event_id):
             'Content-Disposition': f'attachment; filename={filename}'
         }
     )
+
+@app.route('/admin/registration/<registration_id>/cancel', methods=['POST'])
+@admin_required
+def admin_cancel_registration(registration_id):
+    """Cancel a registration by admin (walk leader)"""
+    registration = Registration.query.get_or_404(registration_id)
+    event = registration.event
+    location = next((l for l in WALK_LOCATIONS if l['id'] == event.location_id), None)
+    
+    # Check if already cancelled
+    if registration.cancelled_at:
+        flash('This registration is already cancelled.', 'error')
+        return redirect(url_for('admin_event_registrations', event_id=event.id))
+    
+    # Get optional admin note
+    admin_note = request.form.get('admin_note', '').strip()
+    
+    # Cancel the registration
+    registration.cancelled_at = datetime.utcnow()
+    db.session.commit()
+    
+    # Send cancellation email to user
+    try:
+        send_admin_cancellation_notification(registration, admin_note)
+        flash(f'Registration for {registration.name} has been cancelled and they have been notified by email.', 'success')
+    except Exception as e:
+        print(f"[ERROR] Failed to send cancellation email: {e}")
+        flash(f'Registration cancelled but failed to send email notification: {e}', 'warning')
+    
+    # Also notify admin (the walk leader)
+    try:
+        send_admin_notification(registration, event_type='cancelled')
+    except Exception as e:
+        print(f"[ERROR] Failed to notify admin of cancellation: {e}")
+    
+    return redirect(url_for('admin_event_registrations', event_id=event.id))
 
 # ============================================================================
 # INITIALIZATION
