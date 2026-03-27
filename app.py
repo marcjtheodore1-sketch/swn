@@ -224,10 +224,11 @@ def generate_calendar_invite(event, location, registration, is_update=False):
             f"",
         ]
         
-        # Add walk details if available
-        if event.meet_when_where:
+        # Add walk details if available - prioritize detailed fields, fall back to meeting_point
+        meeting_info = event.meet_when_where or event.meeting_point
+        if meeting_info and meeting_info != "TBC":
             description_parts.append("MEETING:")
-            description_parts.append(event.meet_when_where)
+            description_parts.append(meeting_info)
             description_parts.append("")
         
         if event.route_description:
@@ -249,6 +250,12 @@ def generate_calendar_invite(event, location, registration, is_update=False):
         if event.visual_story_url:
             description_parts.append("VISUAL STORY:")
             description_parts.append(event.visual_story_url)
+            description_parts.append("")
+        
+        # If no detailed info available yet, add a note
+        if not meeting_info or meeting_info == "TBC":
+            description_parts.append("NOTE:")
+            description_parts.append("Detailed walk information will be sent closer to the date.")
             description_parts.append("")
         
         # Add what to bring
@@ -321,6 +328,9 @@ def send_registration_confirmation(registration):
 
 Thank you for registering for the Strolling with Neurokin walk!
 
+📅 ADD TO YOUR CALENDAR:
+A calendar invitation is attached to this email. Please add it to your calendar so you don't miss the walk! You'll receive automatic reminders 1 day and 1 hour before the event.
+
 WALK DETAILS:
 Location: {location['name']}
 Date: {registration.event.walk_date.strftime('%A, %d %B %Y')}
@@ -358,6 +368,13 @@ London Autism Group Charity
         
         <p>Thank you for registering for the <strong>Strolling with Neurokin</strong> walk!</p>
         
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;">
+            <h3 style="color: #15803d; margin-top: 0;">📅 ADD TO YOUR CALENDAR</h3>
+            <p><strong>A calendar invitation is attached to this email.</strong></p>
+            <p>Please click "Add to calendar" or "Accept" in your email client to save the date and receive reminders before the walk.</p>
+            <p style="font-size: 0.9em; color: #166534; margin-top: 10px;">You'll get automatic reminders 1 day and 1 hour before the walk starts.</p>
+        </div>
+        
         <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #6B46C1; margin-top: 0;">WALK DETAILS</h3>
             <p><strong>Location:</strong> {location['name']}</p>
@@ -376,8 +393,8 @@ London Autism Group Charity
             <li>Phone (for WhatsApp group if you consented)</li>
         </ul>
         
-        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #2e7d32; margin-top: 0;">MANAGE YOUR BOOKING</h3>
+        <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #0369a1; margin-top: 0;">MANAGE YOUR BOOKING</h3>
             <p>You can view or cancel your booking at any time:</p>
             <a href="{my_bookings_url}" style="display: inline-block; background: #6B46C1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View My Bookings</a>
         </div>
