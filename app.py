@@ -179,7 +179,12 @@ def send_email(to_email, subject, body, html_body=None, calendar_ics=None):
         
         # Add calendar attachment if provided
         if calendar_ics:
-            part = MIMEText(calendar_ics, 'calendar; method=REQUEST', 'utf-8')
+            from email.mime.base import MIMEBase
+            from email import encoders
+            
+            part = MIMEBase('text', 'calendar', method='REQUEST', name='event.ics')
+            part.set_payload(calendar_ics.encode('utf-8'))
+            encoders.encode_base64(part)
             part.add_header('Content-Disposition', 'attachment; filename="event.ics"')
             part.add_header('Content-Class', 'urn:content-classes:calendarmessage')
             msg.attach(part)
@@ -197,6 +202,10 @@ def send_email(to_email, subject, body, html_body=None, calendar_ics=None):
 def generate_calendar_invite(event, location, registration, is_update=False):
     """Generate a Google Calendar (.ics) invite for a walk"""
     try:
+        import traceback
+        from ics import Calendar, Event as ICSEvent
+        from ics.alarm import DisplayAlarm
+        
         # Create calendar
         cal = Calendar()
         
@@ -259,18 +268,21 @@ def generate_calendar_invite(event, location, registration, is_update=False):
         else:
             ics_event.location = f"{location['name']}, London"
         
-        # Set start and end times
+        # Set start and end times with timezone
+        from datetime import timezone
         year = event.walk_date.year
         month = event.walk_date.month
         day = event.walk_date.day
         
         # Parse start time
         start_hour, start_minute = map(int, event.start_time.split(':'))
-        ics_event.begin = datetime(year, month, day, start_hour, start_minute, 0)
+        start_dt = datetime(year, month, day, start_hour, start_minute, 0, tzinfo=timezone.utc)
+        ics_event.begin = start_dt
         
         # Parse end time
         end_hour, end_minute = map(int, event.end_time.split(':'))
-        ics_event.end = datetime(year, month, day, end_hour, end_minute, 0)
+        end_dt = datetime(year, month, day, end_hour, end_minute, 0, tzinfo=timezone.utc)
+        ics_event.end = end_dt
         
         # Add reminder (1 day before)
         alarm = DisplayAlarm(trigger=timedelta(days=-1), description="Strolling with Neurokin walk tomorrow!")
@@ -286,9 +298,12 @@ def generate_calendar_invite(event, location, registration, is_update=False):
         # Add to calendar
         cal.events.add(ics_event)
         
-        return str(cal)
+        calendar_string = str(cal)
+        print(f"[INFO] Generated calendar invite for {registration.name} - {event.walk_date}")
+        return calendar_string
     except Exception as e:
         print(f"[ERROR] Failed to generate calendar invite: {e}")
+        traceback.print_exc()
         return None
 
 def send_registration_confirmation(registration):
