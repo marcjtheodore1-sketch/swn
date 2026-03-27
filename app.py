@@ -285,11 +285,13 @@ def generate_calendar_invite(event, location, registration, is_update=False):
         ics_event.end = end_dt
         
         # Add reminder (1 day before)
-        alarm = DisplayAlarm(trigger=timedelta(days=-1), description="Strolling with Neurokin walk tomorrow!")
+        alarm = DisplayAlarm(trigger=timedelta(days=-1))
+        alarm.description = "Strolling with Neurokin walk tomorrow!"
         ics_event.alarms.append(alarm)
         
         # Add another reminder (1 hour before)
-        alarm2 = DisplayAlarm(trigger=timedelta(hours=-1), description="Walk starts in 1 hour!")
+        alarm2 = DisplayAlarm(trigger=timedelta(hours=-1))
+        alarm2.description = "Walk starts in 1 hour!"
         ics_event.alarms.append(alarm2)
         
         # Set UID for updates
