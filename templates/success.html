@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Registration Successful - Strolling with Neurokin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-2xl mx-auto">
+        <div class="card text-center">
+            <div class="text-6xl mb-4">🎉</div>
+            <h1 class="text-3xl font-bold text-swn-purple mb-4">
+                Registration Successful!
+            </h1>
+            <p class="text-gray-600 mb-6">
+                Thank you for registering! A confirmation email has been sent to <strong>{{ registration.email }}</strong> with all the details.
+            </p>
+            
+            <!-- Booking details -->
+            <div class="bg-gray-50 rounded-lg p-6 mb-6 text-left">
+                <h3 class="font-bold text-gray-800 mb-4 text-lg">Your Registration Details</h3>
+                <div class="space-y-2">
+                    <p><span class="text-gray-600">Name:</span> <strong class="text-gray-800">{{ registration.name }}</strong></p>
+                    <p><span class="text-gray-600">Email:</span> <strong class="text-gray-800">{{ registration.email }}</strong></p>
+                    <p><span class="text-gray-600">Date:</span> <strong class="text-gray-800">{{ registration.event.walk_date.strftime('%A, %-d %B %Y') }}</strong></p>
+                    <p><span class="text-gray-600">Time:</span> <strong class="text-gray-800">{{ registration.event.start_time }} - {{ registration.event.end_time }}</strong></p>
+                    <p><span class="text-gray-600">Location:</span> <strong class="text-gray-800">{{ registration.event.location_id | replace('-', ' ') | title }}</strong></p>
+                </div>
+            </div>
+
+            <!-- Manage booking section -->
+            <div class="bg-swn-purple/10 rounded-lg p-6 mb-6">
+                <h3 class="font-bold text-swn-purple mb-2">📧 Manage Your Booking</h3>
+                <p class="text-gray-700 mb-4">
+                    You can view or cancel your booking at any time using your email address.
+                </p>
+                <a href="{{ url_for('my_bookings') }}" class="btn-primary inline-block">
+                    View My Bookings
+                </a>
+            </div>
+            
+            <!-- Cancel link -->
+            <p class="text-sm text-gray-500 mb-6">
+                Need to cancel? Use this link:<br>
+                <a href="{{ url_for('cancel_registration', token=registration.cancel_token) }}" class="text-red-600 hover:underline">
+                    Cancel this registration
+                </a>
+            </p>
+            
+            <a href="{{ url_for('landing') }}" class="btn-secondary inline-block">
+                Return to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

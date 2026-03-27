@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <!-- Hero Section -->
+    <div class="text-center mb-16">
+        <div class="mb-8">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Strolling with Neurokin Logo" class="mx-auto rounded-lg shadow-lg" style="max-width: 349px;">
+        </div>
+        <h1 class="text-5xl md:text-6xl font-bold text-swn-purple mb-6">
+            Strolling with Neurokin
+        </h1>
+        <p class="text-2xl text-gray-600 mb-4">(SwN)</p>
+        <p class="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed mb-6">
+            Gentle, inclusive strolls through London for the autism community. 
+            Whether you're autistic yourself, a family member, carer, or ally — 
+            everyone in our wider autism community is welcome.
+        </p>
+        <div class="inline-flex items-center px-6 py-3 bg-green-100 text-green-800 rounded-full font-semibold text-lg">
+            <span class="mr-2">🎉</span>
+            Completely Free — No Barriers to Access
+        </div>
+    </div>
+
+    <!-- What to Expect -->
+    <div class="max-w-4xl mx-auto mb-16">
+        <div class="card">
+            <h2 class="text-3xl font-bold text-swn-purple mb-6 text-center">What to Expect</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <span class="text-2xl">🚶</span>
+                        <div>
+                            <h3 class="font-semibold text-lg">2 Hour Stroll</h3>
+                            <p class="text-gray-600">A gentle, wheelchair-accessible route with plenty to see</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-2xl">☕</span>
+                        <div>
+                            <h3 class="font-semibold text-lg">Break Halfway</h3>
+                            <p class="text-gray-600">30-minute stop for drinks, snacks, and recharging</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-2xl">👥</span>
+                        <div>
+                            <h3 class="font-semibold text-lg">Small Groups</h3>
+                            <p class="text-gray-600">Maximum 20 people for a comfortable experience</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-2xl">💚</span>
+                        <div>
+                            <h3 class="font-semibold text-lg">Completely Free</h3>
+                            <p class="text-gray-600">No cost, no barriers — everyone is welcome to join</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <span class="text-2xl">🗺️</span>
+                        <div>
+                            <h3 class="font-semibold text-lg">Planned Routes</h3>
+                            <p class="text-gray-600">Each walk is carefully planned with interesting sights</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-2xl">💬</span>
+                        <div>
+                            <h3 class="font-semibold text-lg">Walk & Talk</h3>
+                            <p class="text-gray-600">A relaxed way to meet others in the community</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-2xl">📱</span>
+                        <div>
+                            <h3 class="font-semibold text-lg">WhatsApp Support</h3>
+                            <p class="text-gray-600">Optional group for location sharing on the day</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Selection -->
+    <div class="mb-12">
+        <h2 class="text-3xl font-bold text-center text-swn-purple mb-8">Choose Your Walk</h2>
+        <div class="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {% for location in locations %}
+            <a href="{{ url_for('location', location_id=location.id) }}" class="card hover:shadow-xl transition-shadow cursor-pointer group">
+                <div class="h-32 {{ location.color }} rounded-lg mb-4 flex items-center justify-center">
+                    <span class="text-5xl">🚶</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2 group-hover:text-swn-purple transition-colors">
+                    {{ location.name }}
+                </h3>
+                <p class="text-gray-600 mb-4 line-clamp-3">{{ location.description }}</p>
+                <div class="flex items-center text-sm text-gray-500">
+                    <span class="mr-2">👤</span>
+                    <span>Led by {{ location.facilitator }}</span>
+                </div>
+                <div class="mt-4 text-swn-purple font-semibold">
+                    View dates & register →
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Volunteer Support -->
+    <div class="max-w-4xl mx-auto mb-12">
+        <div class="card bg-gradient-to-r from-swn-purple/10 to-swn-teal/10 border-swn-purple/20">
+            <div class="flex items-start space-x-4">
+                <span class="text-4xl">🤝</span>
+                <div>
+                    <h3 class="text-xl font-bold text-swn-purple mb-2">Supported by Volunteers</h3>
+                    <p class="text-gray-700 leading-relaxed">
+                        Every stroll is always supported by at least <strong>two London Autism Group Charity volunteers</strong>. 
+                        This ensures there is always someone available to help, answer questions, 
+                        and provide assistance if needed. You're in safe hands throughout your walk.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accessibility Note -->
+    <div class="max-w-3xl mx-auto text-center">
+        <div class="card bg-swn-teal/10 border-swn-teal">
+            <h3 class="text-xl font-bold text-swn-teal mb-3">Accessibility First</h3>
+            <p class="text-gray-700">
+                All our routes are designed to be wheelchair accessible and inclusive. 
+                We call them "strolls" because we want everyone to feel welcome — 
+                whether you walk, roll, or stroll at your own pace.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

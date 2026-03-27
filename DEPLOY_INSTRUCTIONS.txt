@@ -1,0 +1,76 @@
+========================================
+SWN UPGRADE - STEP BY STEP
+========================================
+
+Follow these steps IN ORDER.
+
+----------------------------------------
+STEP 1: Upload the zip file
+----------------------------------------
+1. Go to pythonanywhere.com
+2. Click "Files" tab
+3. Click "Upload a file"
+4. Select: SwN-flask-v2-email-notifications.zip
+5. Wait for upload to finish
+
+----------------------------------------
+STEP 2: Unzip the files
+----------------------------------------
+1. Click "Consoles" tab
+2. Click on your "Bash" console (black screen)
+3. Type: unzip -o SwN-flask-v2-email-notifications.zip
+4. Press Enter
+5. Wait for it to finish
+
+----------------------------------------
+STEP 3: Update database
+----------------------------------------
+In the SAME Bash console:
+
+1. Type: cd SwN-flask
+2. Press Enter
+3. Type: workon swn-venv
+4. Press Enter
+5. Type: python
+6. Press Enter
+7. You'll see ">>>" - now type these 4 lines one by one:
+
+   from app import app, db
+   with app.app_context():
+       db.create_all()
+   print("Done!")
+
+8. Type: exit()
+9. Press Enter
+
+----------------------------------------
+STEP 4: Add email settings
+----------------------------------------
+1. Click "Web" tab
+2. Scroll down to "Environment variables"
+3. Click "+" button for each one:
+
+   ENABLE_EMAIL = true
+   SMTP_HOST = smtp.gmail.com
+   SMTP_PORT = 587
+   SMTP_USER = miles.lagc@gmail.com
+   SMTP_PASSWORD = (see Gmail instructions below)
+   SMTP_FROM = londonautismgroupcharity@gmail.com
+
+TO GET SMTP_PASSWORD:
+- Go to gmail.com (miles.lagc@gmail.com)
+- Google Account → Security → App passwords
+- Generate new app password for "Mail"
+- Copy the 16-character code
+- Paste it in PythonAnywhere
+
+----------------------------------------
+STEP 5: Reload
+----------------------------------------
+1. Click "Web" tab
+2. Click green "Reload" button at top
+3. Wait for green checkmark
+
+----------------------------------------
+DONE!
+----------------------------------------

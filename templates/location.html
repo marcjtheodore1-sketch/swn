@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}{{ location.name }} - Strolling with Neurokin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <!-- Breadcrumb -->
+    <div class="mb-6">
+        <a href="{{ url_for('landing') }}" class="text-swn-purple hover:underline">← Back to all walks</a>
+    </div>
+
+    <!-- Location Header -->
+    <div class="{{ location.color }} {{ location.text_color }} rounded-xl p-8 mb-8">
+        <h1 class="text-4xl font-bold mb-4">{{ location.name }}</h1>
+        <p class="text-xl opacity-90 mb-4">{{ location.description }}</p>
+        <div class="flex items-center text-lg mb-2">
+            <span class="mr-2">👤 Walk Leader:</span>
+            <span class="font-semibold">{{ location.facilitator }}</span>
+        </div>
+        <div class="inline-flex items-center px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
+            <span class="mr-2">🎉</span> Completely Free
+        </div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Available Dates -->
+        <div>
+            <h2 class="text-2xl font-bold text-swn-purple mb-6">Available Dates</h2>
+            
+            {% if not events %}
+            <div class="card">
+                <p class="text-gray-600">No upcoming walks scheduled at the moment.</p>
+                <p class="text-gray-500 mt-2">Please check back soon for new dates!</p>
+            </div>
+            {% else %}
+            <div class="space-y-4">
+                <p class="text-sm text-gray-500 mb-4">
+                    Select a date to register. Only the next available walk(s) are open for booking.
+                </p>
+                {% for event in events %}
+                <div class="card {% if request.args.get('event') == event.id %}ring-2 ring-swn-purple bg-swn-purple/5{% endif %}">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-2xl font-bold text-swn-purple">
+                                {{ event.walk_date.strftime('%A, %-d %B %Y') }}
+                            </p>
+                            <p class="text-gray-600">
+                                {{ event.start_time }} - {{ event.end_time }}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            {% if event.is_full %}
+                            <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700">
+                                Fully Booked
+                            </span>
+                            {% else %}
+                            <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">
+                                {{ event.max_participants - event.registered_count }} spaces left
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Walk Details -->
+                    {% if event.meet_when_where or event.route_description or event.break_plan or event.finish_details %}
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 text-sm">
+                        <div class="whitespace-pre-wrap text-gray-700">{{ event.full_description }}</div>
+                        
+                        <!-- Visual Story Link -->
+                        {% if event.visual_story_url %}
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <a href="{{ event.visual_story_url }}" target="_blank" 
+                               class="inline-flex items-center px-4 py-2 bg-swn-purple text-white rounded-lg hover:bg-opacity-90 transition-all">
+                                <span class="mr-2">📖</span>
+                                View Visual Story
+                                <span class="ml-2 text-xs">(opens in new tab)</span>
+                            </a>
+                            <p class="text-xs text-gray-500 mt-2">
+                                A visual guide to help you prepare for this walk
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500 mb-4">
+                        Meeting point: {{ event.meeting_point }}
+                    </p>
+                    {% endif %}
+                    
+                    {% if not event.is_full %}
+                    <a href="{{ url_for('location', location_id=location.id, event=event.id) }}" 
+                       class="inline-block px-6 py-2 rounded-lg font-semibold transition-all
+                       {% if request.args.get('event') == event.id %}bg-swn-purple text-white{% else %}bg-swn-teal text-white hover:bg-opacity-90{% endif %}">
+                        {% if request.args.get('event') == event.id %}Selected ✓{% else %}Register for this date{% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- What to Bring -->
+            <div class="card mt-6">
+                <h3 class="text-xl font-bold text-swn-purple mb-4">What to Bring</h3>
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex items-center"><span class="mr-2">👟</span> Comfortable footwear</li>
+                    <li class="flex items-center"><span class="mr-2">💧</span> Water bottle</li>
+                    <li class="flex items-center"><span class="mr-2">🧥</span> Weather-appropriate clothing</li>
+                    <li class="flex items-center"><span class="mr-2">💳</span> Money for breaktime drinks/snacks</li>
+                    <li class="flex items-center"><span class="mr-2">📱</span> Phone (for WhatsApp group if you consent)</li>
+                </ul>
+            </div>
+
+            <!-- Volunteer Support -->
+            <div class="card mt-6 bg-gradient-to-r from-swn-purple/10 to-swn-teal/10 border-swn-purple/20">
+                <div class="flex items-start space-x-3">
+                    <span class="text-3xl">🤝</span>
+                    <div>
+                        <h3 class="text-lg font-bold text-swn-purple mb-2">Volunteer Support</h3>
+                        <p class="text-gray-700 text-sm leading-relaxed">
+                            Every stroll is supported by at least <strong>two London Autism Group Charity volunteers</strong> alongside your walk leader. 
+                            They're there to help, answer questions, and ensure everyone has a safe and enjoyable experience.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div>
+            {% if selected_event %}
+            <h2 class="text-2xl font-bold text-swn-purple mb-6">
+                Register for {{ selected_event.walk_date.strftime('%-d %B') }}
+            </h2>
+            <div class="card">
+                <form action="{{ url_for('register', event_id=selected_event.id) }}" method="POST" class="space-y-5">
+                    <div>
+                        <label for="name" class="block text-base font-semibold text-gray-800 mb-2">
+                            What is your full name? *
+                        </label>
+                        <input type="text" id="name" name="name" required 
+                            class="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple" 
+                            placeholder="Your full name">
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-base font-semibold text-gray-800 mb-2">
+                            What is your email address? *
+                        </label>
+                        <input type="email" id="email" name="email" required 
+                            class="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple" 
+                            placeholder="your.email@example.com">
+                    </div>
+
+                    <div>
+                        <label for="phone" class="block text-base font-semibold text-gray-800 mb-2">
+                            What is your phone number? *
+                        </label>
+                        <input type="tel" id="phone" name="phone" required 
+                            class="w-full px-4 py-4 text-lg border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple" 
+                            placeholder="07123 456789">
+                    </div>
+
+                    <div>
+                        <label for="access_needs" class="block text-base font-semibold text-gray-800 mb-2">
+                            Do you have any accessibility needs or mobility considerations you would like us to be aware of?
+                        </label>
+                        <textarea id="access_needs" name="access_needs" rows="3" 
+                            class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple" 
+                            placeholder="Please tell us about any accessibility needs or mobility considerations (optional)"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="dietary_needs" class="block text-base font-semibold text-gray-800 mb-2">
+                            Do you have any dietary requirements or allergies?
+                        </label>
+                        <textarea id="dietary_needs" name="dietary_needs" rows="2" 
+                            class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple" 
+                            placeholder="Please let us know of any dietary needs or allergies (optional)"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="attending_with" class="block text-base font-semibold text-gray-800 mb-2">
+                            Will you be attending with anyone else (family member, carer, friend, etc.)?
+                        </label>
+                        <p class="text-sm text-gray-500 mb-2">If yes, please include their first name(s) so we can plan numbers accurately</p>
+                        <textarea id="attending_with" name="attending_with" rows="2" 
+                            class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple" 
+                            placeholder="Names of people attending with you (optional)"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="additional_info" class="block text-base font-semibold text-gray-800 mb-2">
+                            Is there anything else you'd like us to know before the day?
+                        </label>
+                        <textarea id="additional_info" name="additional_info" rows="3" 
+                            class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple" 
+                            placeholder="Any other information you'd like to share (optional)"></textarea>
+                    </div>
+
+                    <div class="bg-white border-2 border-swn-purple p-5 rounded-lg shadow-sm">
+                        <label class="flex items-start space-x-3 cursor-pointer">
+                            <input type="checkbox" name="whatsapp_consent" value="true" 
+                                class="mt-1 h-6 w-6 text-swn-purple rounded border-2 border-gray-300 focus:ring-swn-purple">
+                            <div>
+                                <span class="font-bold text-gray-900 text-lg">WhatsApp Group Consent</span>
+                                <p class="text-base text-gray-700 mt-2">
+                                    I consent to being added to a WhatsApp group for this walk. This helps you:
+                                </p>
+                                <ul class="text-base text-gray-700 mt-2 ml-4 list-disc space-y-1">
+                                    <li>See the live location shared by the walk leader on the day</li>
+                                    <li>Catch up if you're running late</li>
+                                    <li>Find the group if you get lost</li>
+                                    <li>Receive important updates about the walk</li>
+                                </ul>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" 
+                            class="w-full bg-swn-purple text-white px-6 py-4 text-lg rounded-lg font-semibold hover:bg-opacity-90 transition-all">
+                            Complete Registration
+                        </button>
+                    </div>
+
+                    <p class="text-sm text-gray-500 text-center">* Required fields</p>
+                </form>
+            </div>
+            {% else %}
+            <div class="card h-full flex items-center justify-center min-h-[400px]">
+                <div class="text-center">
+                    <p class="text-6xl mb-4">📝</p>
+                    <p class="text-xl text-gray-600">Select a date on the left to register</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

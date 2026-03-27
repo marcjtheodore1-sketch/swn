@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Walk Details - Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-swn-purple">Edit Walk Details</h1>
+            <p class="text-gray-600 mt-1">For walk leaders to enter route information</p>
+        </div>
+        <a href="{{ url_for('admin_dashboard') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
+            ← Back to Admin
+        </a>
+    </div>
+
+    <!-- Walk Info Header -->
+    <div class="{{ location.color }} {{ location.text_color }} rounded-xl p-6 mb-8">
+        <h2 class="text-2xl font-bold mb-2">{{ location.name }}</h2>
+        <p class="text-lg opacity-90">{{ event.walk_date.strftime('%A, %-d %B %Y') }}</p>
+        <p class="text-lg">{{ event.start_time }} - {{ event.end_time }}</p>
+        <p class="mt-2 font-semibold">Walk Leader: {{ location.facilitator }}</p>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="card max-w-4xl mx-auto">
+        <form method="POST" class="space-y-6">
+            
+            <!-- Question 1: Meeting Point -->
+            <div>
+                <label for="meet_when_where" class="block text-lg font-bold text-gray-800 mb-2">
+                    1. When and where should people meet? *
+                </label>
+                <p class="text-sm text-gray-500 mb-2">
+                    Include the exact meeting location, what time to arrive, and what time the walk starts.
+                </p>
+                <textarea 
+                    id="meet_when_where" 
+                    name="meet_when_where" 
+                    rows="4" 
+                    required
+                    class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                    placeholder="Example: We will meet at St Alfege's Church (Greenwich Church St, London SE10 8NA). Please arrive from 10:50am. We will leave promptly at 11:10am."
+                >{{ event.meet_when_where or '' }}</textarea>
+            </div>
+
+            <!-- Question 2: Route Description -->
+            <div>
+                <label for="route_description" class="block text-lg font-bold text-gray-800 mb-2">
+                    2. Description of the walk route and sights *
+                </label>
+                <p class="text-sm text-gray-500 mb-2">
+                    Describe the route, what participants will see, and any points of interest. Include accessibility notes if relevant.
+                </p>
+                <textarea 
+                    id="route_description" 
+                    name="route_description" 
+                    rows="6" 
+                    required
+                    class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                    placeholder="Example: We'll walk towards the O2, passing through Greenwich town centre, the Cutty Sark, and the Old Royal Naval College with beautiful views across the River Thames. The route is wheelchair accessible with one small cobbled section and a ramped footbridge over the Blackwall Tunnel approach. This section can be noisy, so participants may wish to bring ear defenders if sensitive to sound."
+                >{{ event.route_description or '' }}</textarea>
+            </div>
+
+            <!-- Question 3: Break Plan -->
+            <div>
+                <label for="break_plan" class="block text-lg font-bold text-gray-800 mb-2">
+                    3. What is the plan for a break midway? *
+                </label>
+                <p class="text-sm text-gray-500 mb-2">
+                    Where will you stop, for how long, and what facilities are available (toilets, cafes, etc.).
+                </p>
+                <textarea 
+                    id="break_plan" 
+                    name="break_plan" 
+                    rows="4" 
+                    required
+                    class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                    placeholder="Example: At the O2, participants are welcome to finish the walk if they prefer. There are several pubs and restaurants, as well as a Costa. For those continuing, there's a café close to Charlton Station."
+                >{{ event.break_plan or '' }}</textarea>
+            </div>
+
+            <!-- Question 4: Finish Details -->
+            <div>
+                <label for="finish_details" class="block text-lg font-bold text-gray-800 mb-2">
+                    4. When and where does the walk finish? *
+                </label>
+                <p class="text-sm text-gray-500 mb-2">
+                    Exact finish location, estimated finish time, and transport links from the finish point.
+                </p>
+                <textarea 
+                    id="finish_details" 
+                    name="finish_details" 
+                    rows="4" 
+                    required
+                    class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                    placeholder="Example: The walk finishes at Charlton Station between approximately 1:10pm and 1:30pm. Charlton has nearby bus stops and a café. Please note timings may vary slightly depending on the pace of the group and any breaks taken along the way."
+                >{{ event.finish_details or '' }}</textarea>
+            </div>
+
+            <!-- Question 5: Visual Story Link (Optional) -->
+            <div>
+                <label for="visual_story_url" class="block text-lg font-bold text-gray-800 mb-2">
+                    5. Visual Story Link (Optional)
+                </label>
+                <p class="text-sm text-gray-500 mb-2">
+                    If you have created a visual/social story for this walk (e.g., on Canva, Google Docs, etc.), paste the link here. This helps participants prepare for the walk.
+                </p>
+                <input 
+                    type="url" 
+                    id="visual_story_url" 
+                    name="visual_story_url"
+                    class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                    placeholder="https://www.canva.com/... or https://docs.google.com/..."
+                    value="{{ event.visual_story_url or '' }}"
+                >
+            </div>
+
+            <!-- Preview Section -->
+            {% if event.meet_when_where or event.route_description or event.break_plan or event.finish_details %}
+            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Current Description Preview</h3>
+                <div class="whitespace-pre-wrap text-gray-700">{{ event.full_description }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Submit Buttons -->
+            <div class="flex gap-4 pt-4">
+                <button type="submit" class="flex-1 bg-swn-purple text-white px-6 py-4 text-lg rounded-lg font-semibold hover:bg-opacity-90 transition-all">
+                    Save Walk Details
+                </button>
+                <a href="{{ url_for('admin_dashboard') }}" class="px-6 py-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

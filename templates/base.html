@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Strolling with Neurokin{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-swn-purple { background-color: #6B46C1; }
+        .bg-swn-teal { background-color: #38B2AC; }
+        .bg-swn-rose { background-color: #F472B6; } /* lighter pink for Greenwich */
+        .text-swn-purple { color: #6B46C1; }
+        .text-swn-teal { color: #38B2AC; }
+        .bg-swn-cream { background-color: #FFFBF0; }
+        .card {
+            @apply bg-white rounded-xl shadow-lg p-6 border border-gray-100;
+        }
+        .btn-primary {
+            @apply bg-swn-purple text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all;
+        }
+        .btn-secondary {
+            @apply bg-white text-swn-purple border-2 border-swn-purple px-6 py-3 rounded-lg font-semibold hover:bg-swn-purple hover:text-white transition-all;
+        }
+        .input {
+            @apply w-full px-4 py-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple text-lg;
+            min-height: 50px;
+        }
+        textarea.input {
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-swn-cream">
+    <header class="bg-swn-purple text-white py-4">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <a href="{{ url_for('landing') }}" class="flex items-center">
+                    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="SwN" class="rounded" style="height: 40px; width: auto;">
+                </a>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="{{ url_for('landing') }}" class="hover:text-swn-teal transition-colors">Home</a>
+                    <a href="{{ url_for('my_bookings') }}" class="hover:text-swn-teal transition-colors">My Bookings</a>
+                    <a href="{{ url_for('admin_login') }}" class="hover:text-swn-teal transition-colors">Admin</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main class="min-h-[calc(100vh-200px)]">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container mx-auto px-4 py-4">
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-2">Strolling with Neurokin (SwN) - A Group Charity Initiative</p>
+            <p class="text-sm text-gray-400">Inclusive walk and talk sessions for the autism community in London</p>
+        </div>
+    </footer>
+</body>
+</html>
