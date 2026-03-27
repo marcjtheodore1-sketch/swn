@@ -52,7 +52,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     {% for event in events %}
-                    {% set location = locations | selectattr('id', 'equalto', event.location_id) | first %}
+                    {% set location = event_data.location %}
                     <tr>
                         <td class="py-4 px-6">
                             <div class="font-medium text-gray-800">{{ event.walk_date.strftime('%-d %b %Y') }}</div>
@@ -98,7 +98,7 @@
     </div>
     {% endif %}
     
-    {% for event, event_regs in registrations | groupby('event') | sort(attribute='0.walk_date') %}
+    {% for event_id, event_data in registrations_by_event.items() %}
     {% set location = locations | selectattr('id', 'equalto', event.location_id) | first %}
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
         <!-- Event Header -->
@@ -106,17 +106,17 @@
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-gray-800">
-                        {{ location.name }} — {{ event.walk_date.strftime('%A, %-d %B %Y') }}
+                        {{ location.name }} — {{ event_data.event.walk_date.strftime('%A, %-d %B %Y') }}
                     </h3>
                     <p class="text-sm text-gray-600">
-                        {{ event.start_time }} - {{ event.end_time }} 
+                        {{ event_data.event.start_time }} - {{ event_data.event.end_time }} 
                         <span class="mx-2">|</span>
-                        <span class="font-semibold text-swn-purple">{{ event_regs | length }}</span> registered
+                        <span class="font-semibold text-swn-purple">{{ event_data.registrations | length }}</span> registered
                     </p>
                 </div>
-                <a href="{{ url_for('admin_edit_walk', event_id=event.id) }}" 
+                <a href="{{ url_for('admin_edit_walk', event_id=event_data.event.id) }}" 
                    class="inline-flex items-center px-3 py-1.5 bg-swn-purple text-white text-sm rounded hover:bg-opacity-90">
-                    {% if event.meet_when_where %}Edit Details{% else %}Add Walk Details{% endif %}
+                    {% if event_data.event.meet_when_where %}Edit Details{% else %}Add Walk Details{% endif %}
                 </a>
             </div>
         </div>
@@ -133,7 +133,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    {% for reg in event_regs %}
+                    {% for reg in event_data.registrations %}
                     <tr class="hover:bg-gray-50">
                         <td class="py-3 px-6">
                             <div class="font-medium text-gray-800">{{ reg.name }}</div>

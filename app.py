@@ -808,11 +808,25 @@ def admin_dashboard():
         Registration.created_at.desc()
     ).all()
     
+    # Group registrations by event (for walk leader view)
+    from collections import OrderedDict
+    registrations_by_event = OrderedDict()
+    for reg in registrations:
+        event_id = reg.event.id
+        if event_id not in registrations_by_event:
+            registrations_by_event[event_id] = {
+                'event': reg.event,
+                'location': next((l for l in WALK_LOCATIONS if l['id'] == reg.event.location_id), None),
+                'registrations': []
+            }
+        registrations_by_event[event_id]['registrations'].append(reg)
+    
     return render_template(
         'admin.html',
         locations=WALK_LOCATIONS,
         events=events,
         registrations=registrations,
+        registrations_by_event=registrations_by_event,
         stats={
             'total_events': total_events,
             'upcoming_events': upcoming_events,
