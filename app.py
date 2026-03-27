@@ -54,7 +54,6 @@ WALK_LOCATIONS = [
         'facilitator': 'Hazel East',
         'color': 'bg-purple-600',
         'text_color': 'text-white',
-        'leader_email': '',  # Add Hazel's email here to receive registration notifications
     },
     {
         'id': 'ealing',
@@ -63,7 +62,6 @@ WALK_LOCATIONS = [
         'facilitator': 'Zara Salih',
         'color': 'bg-teal-500',
         'text_color': 'text-white',
-        'leader_email': '',  # Add Zara's email here to receive registration notifications
     },
     {
         'id': 'greenwich',
@@ -72,7 +70,6 @@ WALK_LOCATIONS = [
         'facilitator': 'Eoin Little',
         'color': 'bg-pink-400',
         'text_color': 'text-gray-900',
-        'leader_email': '',  # Add Eoin's email here to receive registration notifications
     },
 ]
 
@@ -463,19 +460,7 @@ View admin dashboard:
 https://swn-londonautismgroupcharity.pythonanywhere.com/admin
 """
     
-    # Send to main admin email
-    result = send_email(app.config['ADMIN_EMAIL'], subject, body)
-    
-    # Also send to walk leader if they have an email configured
-    if location.get('leader_email'):
-        try:
-            # Add a note that this is a copy for the walk leader
-            leader_body = body + f"\n\n---\nThis is a copy of the registration notification for your walk at {location['name']}.\nYou can manage your walk details at: https://swn-londonautismgroupcharity.pythonanywhere.com/admin\n"
-            send_email(location['leader_email'], subject, leader_body)
-        except Exception as e:
-            print(f"[ERROR] Failed to send notification to walk leader: {e}")
-    
-    return result
+    return send_email(app.config['ADMIN_EMAIL'], subject, body)
 
 def send_admin_cancellation_notification(registration, admin_note=''):
     """Send notification to user when admin cancels their registration"""
