@@ -328,9 +328,6 @@ def send_registration_confirmation(registration):
 
 Thank you for registering for the Strolling with Neurokin walk!
 
-📅 ADD TO YOUR CALENDAR:
-A calendar invitation is attached to this email. Please add it to your calendar so you don't miss the walk! You'll receive automatic reminders 1 day and 1 hour before the event.
-
 WALK DETAILS:
 Location: {location['name']}
 Date: {registration.event.walk_date.strftime('%A, %d %B %Y')}
@@ -348,6 +345,8 @@ WHAT TO BRING:
 MANAGE YOUR BOOKING:
 You can view or cancel your booking at any time:
 {my_bookings_url}
+
+📅 A calendar invite is attached to this email. Please add it to your calendar so you don't miss the walk!
 
 To cancel this specific registration, use this link:
 {cancel_url}
@@ -367,13 +366,6 @@ London Autism Group Charity
         <h2 style="color: #6B46C1;">Hello {registration.name},</h2>
         
         <p>Thank you for registering for the <strong>Strolling with Neurokin</strong> walk!</p>
-        
-        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;">
-            <h3 style="color: #15803d; margin-top: 0;">📅 ADD TO YOUR CALENDAR</h3>
-            <p><strong>A calendar invitation is attached to this email.</strong></p>
-            <p>Please click "Add to calendar" or "Accept" in your email client to save the date and receive reminders before the walk.</p>
-            <p style="font-size: 0.9em; color: #166534; margin-top: 10px;">You'll get automatic reminders 1 day and 1 hour before the walk starts.</p>
-        </div>
         
         <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #6B46C1; margin-top: 0;">WALK DETAILS</h3>
@@ -397,6 +389,10 @@ London Autism Group Charity
             <h3 style="color: #0369a1; margin-top: 0;">MANAGE YOUR BOOKING</h3>
             <p>You can view or cancel your booking at any time:</p>
             <a href="{my_bookings_url}" style="display: inline-block; background: #6B46C1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View My Bookings</a>
+        </div>
+        
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #6B46C1;">
+            <p style="margin: 0;"><strong>📅 Calendar invite attached.</strong> Please add it to your calendar so you don't miss the walk!</p>
         </div>
         
         <p style="margin-top: 30px;">
