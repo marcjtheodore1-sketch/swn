@@ -38,16 +38,18 @@
     <!-- Events Section -->
     <h2 class="text-2xl font-bold text-gray-800 mb-4">All Events</h2>
     
-    <!-- Advertised Count -->
-    {% set advertised_count = events | selectattr('is_advertised', 'equalto', true) | list | length %}
-    <div class="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
+    <!-- Advertised Count Per Location -->
+    {% for loc in locations %}
+    {% set loc_advertised = events | selectattr('location_id', 'equalto', loc.id) | selectattr('is_advertised', 'equalto', true) | list | length %}
+    <div class="bg-blue-50 rounded-lg p-3 mb-2 border border-blue-200 flex justify-between items-center">
         <p class="text-sm text-blue-800">
-            <strong>{{ advertised_count }}</strong> of <strong>2</strong> walks currently advertised for registration on the website.
-            {% if advertised_count >= 2 %}<span class="text-red-600">(Maximum reached)</span>{% endif %}
+            <strong>{{ loc.name }}:</strong> {{ loc_advertised }} of 2 walks advertised
         </p>
+        {% if loc_advertised >= 2 %}<span class="text-xs text-red-600 font-medium">(Max reached)</span>{% endif %}
     </div>
+    {% endfor %}
     
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8 mt-4">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
@@ -100,12 +102,21 @@
                         </td>
                         <td class="py-4 px-6">
                             <div class="flex gap-2 flex-wrap">
-                                <form action="{{ url_for('admin_toggle_advertised', event_id=event.id) }}" method="POST" class="inline">
+                                {% if event.is_advertised %}
+                                <form action="{{ url_for('admin_toggle_advertised', event_id=event.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to stop advertising this walk?\n\nExisting registrations will be preserved and can still be viewed. You can re-advertise this walk later and all details will be restored.');">
                                     <button type="submit" 
-                                            class="inline-flex items-center px-3 py-1 {% if event.is_advertised %}bg-red-500 hover:bg-red-600{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white text-sm rounded transition-colors">
-                                        {% if event.is_advertised %}Stop Advertising{% else %}Advertise{% endif %}
+                                            class="inline-flex items-center px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition-colors">
+                                        Stop Advertising
                                     </button>
                                 </form>
+                                {% else %}
+                                <form action="{{ url_for('admin_toggle_advertised', event_id=event.id) }}" method="POST" class="inline">
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors">
+                                        Advertise
+                                    </button>
+                                </form>
+                                {% endif %}
                                 <a href="{{ url_for('admin_event_registrations', event_id=event.id) }}" 
                                    class="inline-flex items-center px-3 py-1 bg-swn-teal text-white text-sm rounded hover:bg-opacity-90">
                                     View {{ event.registered_count }}

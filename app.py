@@ -1094,14 +1094,17 @@ def admin_toggle_advertised(event_id):
     event = WalkEvent.query.get_or_404(event_id)
     
     if event.is_advertised:
-        # Deactivate
+        # Deactivate - just toggle the flag, keep all data and registrations
         event.is_advertised = False
-        flash(f'Walk on {event.walk_date.strftime("%d %b")} is no longer advertised for registration.', 'success')
+        flash(f'Walk on {event.walk_date.strftime("%d %b")} is no longer advertised for registration. Existing registrations are preserved and can still be viewed.', 'success')
     else:
-        # Activate - check if we already have 2 advertised
-        advertised_count = WalkEvent.query.filter_by(is_advertised=True).count()
+        # Activate - check if we already have 2 advertised for this location
+        advertised_count = WalkEvent.query.filter_by(
+            location_id=event.location_id,
+            is_advertised=True
+        ).count()
         if advertised_count >= 2:
-            flash('Maximum of 2 walks can be advertised at once. Please deactivate another walk first.', 'error')
+            flash('Maximum of 2 walks can be advertised per location. Please deactivate another walk for this location first.', 'error')
         else:
             event.is_advertised = True
             flash(f'Walk on {event.walk_date.strftime("%d %b")} is now advertised for registration!', 'success')
