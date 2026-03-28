@@ -86,16 +86,17 @@
 
     <!-- Location Selection -->
     <div class="mb-12">
-        <h2 class="text-3xl font-bold text-center text-swn-purple mb-8">Choose Your Walk</h2>
+        <h2 class="text-3xl font-bold text-center text-swn-purple mb-8">Choose Your Stroll</h2>
         <div class="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {% for location in locations %}
             <a href="{{ url_for('location', location_id=location.id) }}" class="card hover:shadow-xl transition-shadow cursor-pointer group">
-                <div class="h-32 {{ location.color }} rounded-lg mb-4 flex items-center justify-center">
-                    <span class="text-5xl">🚶</span>
+                <div class="h-32 rounded-lg mb-4 flex items-center justify-center border-4 bg-white
+                    {% if location.id == 'city-of-london' %}border-purple-600 text-purple-600
+                    {% elif location.id == 'ealing' %}border-teal-500 text-teal-500
+                    {% elif location.id == 'greenwich' %}border-pink-400 text-pink-400
+                    {% endif %}">
+                    <span class="text-3xl font-bold">{{ location.name }}</span>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2 group-hover:text-swn-purple transition-colors">
-                    {{ location.name }}
-                </h3>
                 <p class="text-gray-600 mb-4 line-clamp-3">{{ location.description }}</p>
                 <div class="flex items-center text-sm text-gray-500">
                     <span class="mr-2">👤</span>
