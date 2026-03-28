@@ -37,7 +37,7 @@
                 <a href="{{ url_for('landing') }}" class="flex items-center">
                     <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="SwN" class="rounded" style="height: 40px; width: auto;">
                 </a>
-                <nav class="hidden md:flex space-x-6">
+                <nav class="flex space-x-4 text-sm md:text-base md:space-x-6">
                     <a href="{{ url_for('landing') }}" class="hover:text-swn-teal transition-colors">Home</a>
                     <a href="{{ url_for('my_bookings') }}" class="hover:text-swn-teal transition-colors">My Bookings</a>
                     <a href="{{ url_for('admin_login') }}" class="hover:text-swn-teal transition-colors">Admin</a>
