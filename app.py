@@ -96,6 +96,9 @@ class WalkEvent(db.Model):
     finish_details = db.Column(db.Text, nullable=True)  # When and where it finishes
     visual_story_url = db.Column(db.String(500), nullable=True)  # Link to visual story (optional)
     
+    # Admin control for advertising walks
+    is_advertised = db.Column(db.Boolean, default=False)  # Whether walk is shown on frontend for registration
+    
     @property
     def full_description(self):
         """Generate full description from walk details"""
@@ -812,11 +815,12 @@ def location(location_id):
     
     today = date.today()
     
-    # Get upcoming events for this location (limit to first 2)
+    # Get upcoming advertised events for this location (limit to first 2)
     events = WalkEvent.query.filter(
         WalkEvent.location_id == location_id,
         WalkEvent.walk_date >= today,
-        WalkEvent.status != 'closed'
+        WalkEvent.status != 'closed',
+        WalkEvent.is_advertised == True
     ).order_by(WalkEvent.walk_date).limit(2).all()
     
     selected_event_id = request.args.get('event')
@@ -835,6 +839,11 @@ def location(location_id):
 def register(event_id):
     """Handle registration"""
     event = WalkEvent.query.get_or_404(event_id)
+    
+    # Check if event is advertised
+    if not event.is_advertised:
+        flash('This walk is not currently open for registration', 'error')
+        return redirect(url_for('location', location_id=event.location_id))
     
     # Check if event is full
     if event.is_full:
@@ -1077,6 +1086,28 @@ def admin_edit_walk(event_id):
         event=event,
         location=location
     )
+
+@app.route('/admin/event/<event_id>/toggle-advertised', methods=['POST'])
+@admin_required
+def admin_toggle_advertised(event_id):
+    """Toggle whether a walk is advertised on the frontend"""
+    event = WalkEvent.query.get_or_404(event_id)
+    
+    if event.is_advertised:
+        # Deactivate
+        event.is_advertised = False
+        flash(f'Walk on {event.walk_date.strftime("%d %b")} is no longer advertised for registration.', 'success')
+    else:
+        # Activate - check if we already have 2 advertised
+        advertised_count = WalkEvent.query.filter_by(is_advertised=True).count()
+        if advertised_count >= 2:
+            flash('Maximum of 2 walks can be advertised at once. Please deactivate another walk first.', 'error')
+        else:
+            event.is_advertised = True
+            flash(f'Walk on {event.walk_date.strftime("%d %b")} is now advertised for registration!', 'success')
+    
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/event/<event_id>/registrations')
 @admin_required

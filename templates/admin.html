@@ -37,6 +37,16 @@
 
     <!-- Events Section -->
     <h2 class="text-2xl font-bold text-gray-800 mb-4">All Events</h2>
+    
+    <!-- Advertised Count -->
+    {% set advertised_count = events | selectattr('is_advertised', 'equalto', true) | list | length %}
+    <div class="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
+        <p class="text-sm text-blue-800">
+            <strong>{{ advertised_count }}</strong> of <strong>2</strong> walks currently advertised for registration on the website.
+            {% if advertised_count >= 2 %}<span class="text-red-600">(Maximum reached)</span>{% endif %}
+        </p>
+    </div>
+    
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
         <div class="overflow-x-auto">
             <table class="w-full">
@@ -47,13 +57,14 @@
                         <th class="text-left py-4 px-6 font-semibold text-gray-700">Time</th>
                         <th class="text-left py-4 px-6 font-semibold text-gray-700">Registered</th>
                         <th class="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Advertised</th>
                         <th class="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     {% for event in events %}
                     {% set location = locations | selectattr('id', 'equalto', event.location_id) | first %}
-                    <tr>
+                    <tr class="{% if event.is_advertised %}bg-green-50{% endif %}">
                         <td class="py-4 px-6">
                             <div class="font-medium text-gray-800">{{ event.walk_date.strftime('%-d %b %Y') }}</div>
                             <div class="text-sm text-gray-500">{{ event.walk_date.strftime('%A') }}</div>
@@ -77,14 +88,31 @@
                             </span>
                         </td>
                         <td class="py-4 px-6">
-                            <div class="flex gap-2">
+                            {% if event.is_advertised %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ✓ Yes
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                No
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex gap-2 flex-wrap">
+                                <form action="{{ url_for('admin_toggle_advertised', event_id=event.id) }}" method="POST" class="inline">
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-3 py-1 {% if event.is_advertised %}bg-red-500 hover:bg-red-600{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white text-sm rounded transition-colors">
+                                        {% if event.is_advertised %}Stop Advertising{% else %}Advertise{% endif %}
+                                    </button>
+                                </form>
                                 <a href="{{ url_for('admin_event_registrations', event_id=event.id) }}" 
                                    class="inline-flex items-center px-3 py-1 bg-swn-teal text-white text-sm rounded hover:bg-opacity-90">
-                                    View {{ event.registered_count }} Registered
+                                    View {{ event.registered_count }}
                                 </a>
                                 <a href="{{ url_for('admin_edit_walk', event_id=event.id) }}" 
                                    class="inline-flex items-center px-3 py-1 bg-swn-purple text-white text-sm rounded hover:bg-opacity-90">
-                                    {% if event.meet_when_where %}Edit{% else %}Add Details{% endif %}
+                                    {% if event.meet_when_where %}Edit{% else %}Add{% endif %}
                                 </a>
                             </div>
                         </td>
