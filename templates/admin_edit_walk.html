@@ -125,11 +125,41 @@
                 <button type="submit" class="flex-1 bg-swn-purple text-white px-6 py-4 text-lg rounded-lg font-semibold hover:bg-opacity-90 transition-all">
                     Save Walk Details
                 </button>
-                <a href="{{ url_for('admin_dashboard') }}" class="px-6 py-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all">
-                    Cancel
+                <a href="{{ url_for('admin_dashboard') }}" id="cancelBtn" class="px-6 py-4 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all">
+                    Back to Admin
                 </a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+// Track if form has been modified
+let formModified = false;
+const form = document.querySelector('form');
+const cancelBtn = document.getElementById('cancelBtn');
+const formInputs = form.querySelectorAll('input, textarea');
+
+// Mark as modified when any input changes
+formInputs.forEach(input => {
+    input.addEventListener('input', () => {
+        formModified = true;
+    });
+});
+
+// Show confirmation when clicking back without saving
+cancelBtn.addEventListener('click', function(e) {
+    if (formModified) {
+        const confirmLeave = confirm('You have unsaved changes.\n\nIf you leave now, your changes will be lost.\n\nClick "OK" to leave without saving, or "Cancel" to stay and save your work.');
+        if (!confirmLeave) {
+            e.preventDefault();
+        }
+    }
+});
+
+// Reset modified flag when form is submitted (saved)
+form.addEventListener('submit', () => {
+    formModified = false;
+});
+</script>
 {% endblock %}
