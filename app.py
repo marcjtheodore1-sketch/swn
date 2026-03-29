@@ -986,11 +986,6 @@ def admin_dashboard():
     """Admin dashboard"""
     today = date.today()
     
-    # Get stats (only count non-cancelled registrations)
-    total_events = WalkEvent.query.count()
-    upcoming_events = WalkEvent.query.filter(WalkEvent.walk_date >= today).count()
-    total_registrations = Registration.query.filter(Registration.cancelled_at.is_(None)).count()
-    
     # Get all events
     events = WalkEvent.query.order_by(WalkEvent.walk_date).all()
     
@@ -999,6 +994,18 @@ def admin_dashboard():
         WalkEvent.walk_date.desc(),
         Registration.created_at.desc()
     ).all()
+    
+    # Calculate registrations per location
+    location_registrations = {}
+    total_registrations = 0
+    for loc in WALK_LOCATIONS:
+        loc_count = Registration.query.filter(
+            Registration.cancelled_at.is_(None)
+        ).join(WalkEvent).filter(
+            WalkEvent.location_id == loc['id']
+        ).count()
+        location_registrations[loc['id']] = loc_count
+        total_registrations += loc_count
     
     # Group registrations by event (for walk leader view)
     from collections import OrderedDict
@@ -1019,11 +1026,9 @@ def admin_dashboard():
         events=events,
         registrations=registrations,
         registrations_by_event=registrations_by_event,
+        location_registrations=location_registrations,
         stats={
-            'total_events': total_events,
-            'upcoming_events': upcoming_events,
-            'total_registrations': total_registrations,
-            'locations': len(WALK_LOCATIONS)
+            'total_registrations': total_registrations
         }
     )
 

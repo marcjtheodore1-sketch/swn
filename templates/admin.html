@@ -15,23 +15,27 @@
         </a>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats - Registrations per Location -->
     <div class="grid md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-purple-600 text-white rounded-xl p-5 shadow-lg">
+            <p class="text-sm opacity-80">City of London</p>
+            <p class="text-3xl font-bold">{{ location_registrations.get('city-of-london', 0) }}</p>
+            <p class="text-xs opacity-70 mt-1">registrations</p>
+        </div>
+        <div class="bg-teal-500 text-white rounded-xl p-5 shadow-lg">
+            <p class="text-sm opacity-80">Ealing</p>
+            <p class="text-3xl font-bold">{{ location_registrations.get('ealing', 0) }}</p>
+            <p class="text-xs opacity-70 mt-1">registrations</p>
+        </div>
+        <div class="bg-pink-400 text-white rounded-xl p-5 shadow-lg">
+            <p class="text-sm opacity-80">Greenwich</p>
+            <p class="text-3xl font-bold">{{ location_registrations.get('greenwich', 0) }}</p>
+            <p class="text-xs opacity-70 mt-1">registrations</p>
+        </div>
         <div class="bg-swn-purple text-white rounded-xl p-5 shadow-lg">
-            <p class="text-sm opacity-80">Total Events</p>
-            <p class="text-3xl font-bold">{{ stats.total_events }}</p>
-        </div>
-        <div class="bg-swn-teal text-white rounded-xl p-5 shadow-lg">
-            <p class="text-sm opacity-80">Upcoming</p>
-            <p class="text-3xl font-bold">{{ stats.upcoming_events }}</p>
-        </div>
-        <div class="bg-pink-500 text-white rounded-xl p-5 shadow-lg">
             <p class="text-sm opacity-80">Total Registrations</p>
             <p class="text-3xl font-bold">{{ stats.total_registrations }}</p>
-        </div>
-        <div class="bg-white rounded-xl p-5 shadow-lg border border-gray-100">
-            <p class="text-sm text-gray-600">Locations</p>
-            <p class="text-3xl font-bold text-swn-purple">{{ stats.locations }}</p>
+            <p class="text-xs opacity-70 mt-1">across all walks</p>
         </div>
     </div>
 
