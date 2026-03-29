@@ -60,12 +60,14 @@
                         <th class="text-left py-4 px-6 font-semibold text-gray-700">Registered</th>
                         <th class="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
                         <th class="text-left py-4 px-6 font-semibold text-gray-700">Advertised</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Walk Details</th>
                         <th class="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     {% for event in events %}
                     {% set location = locations | selectattr('id', 'equalto', event.location_id) | first %}
+                    {% set completion = event.details_completion_status %}
                     <tr class="{% if event.is_advertised %}bg-green-50{% endif %}">
                         <td class="py-4 px-6">
                             <div class="font-medium text-gray-800">{{ event.walk_date.strftime('%-d %b %Y') }}</div>
@@ -97,6 +99,21 @@
                             {% else %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                                 No
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6">
+                            {% if completion == 'completed' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ✓ Completed
+                            </span>
+                            {% elif completion == 'partial' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                ⚠ Partially completed
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                ✗ Not added
                             </span>
                             {% endif %}
                         </td>

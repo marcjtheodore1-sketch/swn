@@ -117,6 +117,19 @@ class WalkEvent(db.Model):
         return self.meeting_point  # Fallback to default meeting point
 
     @property
+    def details_completion_status(self):
+        """Calculate completion status of walk details (questions 1-4)"""
+        fields = [self.meet_when_where, self.route_description, self.break_plan, self.finish_details]
+        filled_count = sum(1 for f in fields if f and f.strip())
+        
+        if filled_count == 0:
+            return "not_added"
+        elif filled_count == 4:
+            return "completed"
+        else:
+            return "partial"
+
+    @property
     def registered_count(self):
         return Registration.query.filter_by(event_id=self.id, cancelled_at=None).count()
     
@@ -729,7 +742,6 @@ def init_events():
             ('2027-01-10', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
             ('2027-02-14', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
             ('2027-03-14', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2027-04-10', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
         ]
         
         for date_str, start, end, meeting in greenwich_dates:
@@ -748,7 +760,6 @@ def init_events():
         city_dates = [
             '2026-05-03', '2026-06-06', '2026-07-04', '2026-08-01',
             '2026-09-05', '2026-10-03', '2026-11-01', '2026-12-06',
-            '2027-01-03', '2027-02-07', '2027-03-07', '2027-04-03'
         ]
         
         for date_str in city_dates:
