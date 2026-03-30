@@ -292,20 +292,19 @@ def generate_calendar_invite(event, location, registration, is_update=False):
         else:
             ics_event.location = f"{location['name']}, London"
         
-        # Set start and end times with timezone
-        from datetime import timezone
+        # Set start and end times (local time - no timezone to avoid shifts)
         year = event.walk_date.year
         month = event.walk_date.month
         day = event.walk_date.day
         
         # Parse start time
         start_hour, start_minute = map(int, event.start_time.split(':'))
-        start_dt = datetime(year, month, day, start_hour, start_minute, 0, tzinfo=timezone.utc)
+        start_dt = datetime(year, month, day, start_hour, start_minute, 0)
         ics_event.begin = start_dt
         
         # Parse end time
         end_hour, end_minute = map(int, event.end_time.split(':'))
-        end_dt = datetime(year, month, day, end_hour, end_minute, 0, tzinfo=timezone.utc)
+        end_dt = datetime(year, month, day, end_hour, end_minute, 0)
         ics_event.end = end_dt
         
         # Add reminder (1 day before)
@@ -758,8 +757,8 @@ def init_events():
         
         # City of London sessions - 1st Sunday of every month starting May 2026
         city_dates = [
-            '2026-05-03', '2026-06-06', '2026-07-04', '2026-08-01',
-            '2026-09-05', '2026-10-03', '2026-11-01', '2026-12-06',
+            '2026-05-03', '2026-06-07', '2026-07-05', '2026-08-02',
+            '2026-09-06', '2026-10-04', '2026-11-01', '2026-12-07',
         ]
         
         for date_str in city_dates:
