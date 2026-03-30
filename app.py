@@ -789,8 +789,8 @@ def init_events():
             event = WalkEvent(
                 location_id='ealing',
                 walk_date=date(year, month, day),
-                start_time='14:00',
-                end_time='16:00',
+                start_time='11:15',
+                end_time='13:30',
                 meeting_point=meeting,
                 max_participants=20
             )

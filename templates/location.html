@@ -96,6 +96,28 @@
                     {% endif %}
                 </div>
                 {% endfor %}
+                
+                {% if location.id == 'ealing' %}
+                <!-- Special note for Ealing April 2026 walk -->
+                <div class="mt-6 bg-amber-50 border-2 border-amber-300 rounded-xl p-6">
+                    <h3 class="font-bold text-amber-800 mb-2">📅 Additional Ealing Stroll – Saturday 18th April 2026</h3>
+                    <p class="text-amber-900 mb-3">
+                        <strong>Time:</strong> 11:15am – 1:30pm
+                    </p>
+                    <p class="text-amber-800 mb-3">
+                        Registration for this particular walk is available through our previous registration system.
+                        From May 2026 onwards, all Ealing strolls will use this new registration system.
+                    </p>
+                    <a href="https://tinyurl.com/lagcswnealingapril" target="_blank" rel="noopener"
+                       class="inline-flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all mb-3">
+                        Register for 18th April stroll →
+                        <span class="ml-2 text-xs">(opens in new tab)</span>
+                    </a>
+                    <p class="text-sm text-amber-700">
+                        Questions? Email Zara at <a href="mailto:zara.lagc@gmail.com" class="underline hover:text-amber-900">zara.lagc@gmail.com</a>
+                    </p>
+                </div>
+                {% endif %}
             </div>
             {% endif %}
 
