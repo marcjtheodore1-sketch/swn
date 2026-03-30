@@ -292,19 +292,23 @@ def generate_calendar_invite(event, location, registration, is_update=False):
         else:
             ics_event.location = f"{location['name']}, London"
         
-        # Set start and end times (local time - no timezone to avoid shifts)
+        # Set start and end times (explicitly as local UK time)
+        import pytz
+        uk_tz = pytz.timezone('Europe/London')
         year = event.walk_date.year
         month = event.walk_date.month
         day = event.walk_date.day
         
-        # Parse start time
+        # Parse start time and localize to UK timezone
         start_hour, start_minute = map(int, event.start_time.split(':'))
         start_dt = datetime(year, month, day, start_hour, start_minute, 0)
+        start_dt = uk_tz.localize(start_dt)
         ics_event.begin = start_dt
         
-        # Parse end time
+        # Parse end time and localize to UK timezone
         end_hour, end_minute = map(int, event.end_time.split(':'))
         end_dt = datetime(year, month, day, end_hour, end_minute, 0)
+        end_dt = uk_tz.localize(end_dt)
         ics_event.end = end_dt
         
         # Add reminder (1 day before)
