@@ -58,7 +58,7 @@ WALK_LOCATIONS = [
     {
         'id': 'ealing',
         'name': 'Ealing',
-        'description': 'Discover the leafy borough of Ealing with its beautiful parks, tree-lined streets, and charming neighbourhoods. Perfect for a relaxed afternoon stroll.',
+        'description': 'Discover the leafy borough of Ealing with its beautiful parks, tree-lined streets, and charming neighbourhoods. Perfect for a relaxed mid-day stroll.',
         'facilitator': 'Zara Salih',
         'color': 'bg-teal-500',
         'text_color': 'text-white',
