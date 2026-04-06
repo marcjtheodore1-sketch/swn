@@ -73,7 +73,12 @@
                 {% endif %}
                 
                 {% for event in events %}
-                <div class="card {% if request.args.get('event') == event.id %}ring-2 ring-swn-purple bg-swn-purple/5{% endif %}">
+                <div class="card border-2
+                    {% if location.id == 'city-of-london' %}border-purple-600
+                    {% elif location.id == 'ealing' %}border-teal-500
+                    {% elif location.id == 'greenwich' %}border-pink-400
+                    {% endif %}
+                    {% if request.args.get('event') == event.id %}ring-2 ring-swn-purple bg-swn-purple/5{% endif %}">
                     <div class="flex justify-between items-start mb-3">
                         <div>
                             <p class="text-2xl font-bold text-swn-purple">
