@@ -10,9 +10,17 @@
             <h1 class="text-3xl font-bold text-swn-purple">Admin Dashboard</h1>
             <p class="text-gray-600 mt-1">Manage Strolling with Neurokin walks and registrations</p>
         </div>
-        <a href="{{ url_for('admin_logout') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
-            Logout
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('admin_archive') }}" class="inline-flex items-center px-4 py-2 bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 font-medium">
+                📦 Archive
+                {% if archived_count > 0 %}
+                <span class="ml-2 bg-amber-600 text-white text-xs px-2 py-0.5 rounded-full">{{ archived_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('admin_logout') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
+                Logout
+            </a>
+        </div>
     </div>
 
     <!-- Stats - Registrations per Location -->
@@ -135,6 +143,12 @@
                                     <button type="submit" 
                                             class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors">
                                         Advertise
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('admin_archive_event', event_id=event.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to move this walk to the archive?\n\nThe event will be hidden from the main list but all registration data will be preserved. You can restore it from the archive at any time.');">
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded transition-colors">
+                                        Move to Archive
                                     </button>
                                 </form>
                                 {% endif %}

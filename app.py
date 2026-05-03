@@ -99,6 +99,9 @@ class WalkEvent(db.Model):
     # Admin control for advertising walks
     is_advertised = db.Column(db.Boolean, default=False)  # Whether walk is shown on frontend for registration
     
+    # Archive status - archived events are hidden from main list but data is preserved
+    is_archived = db.Column(db.Boolean, default=False)
+    
     @property
     def full_description(self):
         """Generate full description from walk details"""
@@ -1002,8 +1005,11 @@ def admin_dashboard():
     """Admin dashboard"""
     today = date.today()
     
-    # Get all events
-    events = WalkEvent.query.order_by(WalkEvent.walk_date).all()
+    # Get all non-archived events
+    events = WalkEvent.query.filter_by(is_archived=False).order_by(WalkEvent.walk_date).all()
+    
+    # Get archived events count
+    archived_count = WalkEvent.query.filter_by(is_archived=True).count()
     
     # Get all registrations (excluding cancelled)
     registrations = Registration.query.filter(Registration.cancelled_at.is_(None)).join(WalkEvent).order_by(
@@ -1043,6 +1049,7 @@ def admin_dashboard():
         registrations=registrations,
         registrations_by_event=registrations_by_event,
         location_registrations=location_registrations,
+        archived_count=archived_count,
         stats={
             'total_registrations': total_registrations
         }
@@ -1143,6 +1150,46 @@ def admin_toggle_advertised(event_id):
     
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/archive')
+@admin_required
+def admin_archive():
+    """View archived events"""
+    # Get all archived events
+    archived_events = WalkEvent.query.filter_by(is_archived=True).order_by(WalkEvent.walk_date.desc()).all()
+    
+    return render_template(
+        'admin_archive.html',
+        locations=WALK_LOCATIONS,
+        archived_events=archived_events
+    )
+
+@app.route('/admin/event/<event_id>/archive', methods=['POST'])
+@admin_required
+def admin_archive_event(event_id):
+    """Archive an event (hide from main list but preserve data)"""
+    event = WalkEvent.query.get_or_404(event_id)
+    
+    # Archive the event
+    event.is_archived = True
+    event.is_advertised = False  # Also stop advertising when archiving
+    db.session.commit()
+    
+    flash(f'Walk on {event.walk_date.strftime("%d %b")} has been archived. All registration data is preserved.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/event/<event_id>/unarchive', methods=['POST'])
+@admin_required
+def admin_unarchive_event(event_id):
+    """Unarchive an event (restore to main list)"""
+    event = WalkEvent.query.get_or_404(event_id)
+    
+    # Unarchive the event
+    event.is_archived = False
+    db.session.commit()
+    
+    flash(f'Walk on {event.walk_date.strftime("%d %b")} has been restored from archive.', 'success')
+    return redirect(url_for('admin_archive'))
 
 @app.route('/admin/event/<event_id>/registrations')
 @admin_required

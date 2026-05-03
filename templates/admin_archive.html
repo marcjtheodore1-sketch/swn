@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Archive - Strolling with Neurokin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-swn-purple">Event Archive</h1>
+            <p class="text-gray-600 mt-1">Archived walks are hidden from the main list but all data is preserved</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('admin_dashboard') }}" class="inline-flex items-center px-4 py-2 bg-swn-purple text-white rounded-lg hover:bg-opacity-90 font-medium">
+                ← Back to Dashboard
+            </a>
+            <a href="{{ url_for('admin_logout') }}" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">
+                Logout
+            </a>
+        </div>
+    </div>
+
+    {% if not archived_events %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+        <p class="text-4xl mb-4">📦</p>
+        <p class="text-gray-500 text-lg">No archived events</p>
+        <p class="text-gray-400 mt-2">Archived events will appear here</p>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Date</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Location</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Time</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Registered</th>
+                        <th class="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for event in archived_events %}
+                    {% set location = locations | selectattr('id', 'equalto', event.location_id) | first %}
+                    <tr class="bg-gray-50">
+                        <td class="py-4 px-6">
+                            <div class="font-medium text-gray-800">{{ event.walk_date.strftime('%-d %b %Y') }}</div>
+                            <div class="text-sm text-gray-500">{{ event.walk_date.strftime('%A') }}</div>
+                        </td>
+                        <td class="py-4 px-6">
+                            <span class="font-medium text-gray-800">{{ location.name }}</span>
+                        </td>
+                        <td class="py-4 px-6 text-gray-600">
+                            {{ event.start_time }} - {{ event.end_time }}
+                        </td>
+                        <td class="py-4 px-6">
+                            <span class="font-semibold text-swn-purple">{{ event.registered_count }}</span>
+                            <span class="text-gray-500"> / {{ event.max_participants }}</span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex gap-2 flex-wrap">
+                                <form action="{{ url_for('admin_unarchive_event', event_id=event.id) }}" method="POST" class="inline">
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors">
+                                        Restore from Archive
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('admin_event_registrations', event_id=event.id) }}" 
+                                   class="inline-flex items-center px-3 py-1 bg-swn-teal text-white text-sm rounded hover:bg-opacity-90">
+                                    View {{ event.registered_count }}
+                                </a>
+                                <a href="{{ url_for('admin_edit_walk', event_id=event.id) }}" 
+                                   class="inline-flex items-center px-3 py-1 bg-swn-purple text-white text-sm rounded hover:bg-opacity-90">
+                                    Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
