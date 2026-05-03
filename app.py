@@ -818,7 +818,20 @@ def admin_required(f):
 @app.route('/')
 def landing():
     """Home page"""
-    return render_template('landing.html', locations=WALK_LOCATIONS)
+    today = date.today()
+    
+    # Get the next upcoming advertised walk
+    next_walk = WalkEvent.query.filter(
+        WalkEvent.walk_date >= today,
+        WalkEvent.is_advertised == True
+    ).order_by(WalkEvent.walk_date).first()
+    
+    # Get location details for the next walk
+    next_walk_location = None
+    if next_walk:
+        next_walk_location = next((l for l in WALK_LOCATIONS if l['id'] == next_walk.location_id), None)
+    
+    return render_template('landing.html', locations=WALK_LOCATIONS, next_walk=next_walk, next_walk_location=next_walk_location)
 
 @app.route('/location/<location_id>')
 def location(location_id):

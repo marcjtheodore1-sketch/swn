@@ -20,6 +20,17 @@
             <span class="mr-2">🎉</span>
             Completely Free — No Barriers to Access
         </div>
+        
+        {% if next_walk and next_walk_location %}
+        <div class="mt-4">
+            <a href="{{ url_for('location', location_id=next_walk.location_id, event=next_walk.id) }}" 
+               class="inline-flex items-center px-6 py-3 bg-swn-purple text-white rounded-full font-semibold text-lg hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl">
+                <span class="mr-2">🏃</span>
+                Next Stroll: {{ next_walk_location.name }} — {{ next_walk.walk_date.strftime('%-d %B') }} at {{ next_walk.start_time }}
+                <span class="ml-2">→</span>
+            </a>
+        </div>
+        {% endif %}
     </div>
 
     <!-- What to Expect -->
