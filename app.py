@@ -738,16 +738,17 @@ def init_events():
         # Greenwich sessions - 2nd Sunday of every month starting May 2026
         greenwich_dates = [
             ('2026-05-10', '11:10', '13:10', "St Alfege's Church (Greenwich Church St, London SE10 8NA). Arrive from 10:50am for an 11:10am departure. The walk goes towards the O2 via Greenwich town centre, Cutty Sark and Old Royal Naval College. Route is wheelchair accessible with one small cobbled section and a ramped footbridge over Blackwall Tunnel approach (can be noisy - bring ear defenders if sound-sensitive). The walk finishes at Charlton Station between 1:10pm-1:30pm, with option to leave earlier at North Greenwich (O2) if preferred."),
-            ('2026-06-13', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2026-07-11', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2026-08-08', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2026-09-12', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2026-10-10', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
+            ('2026-06-14', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
+            ('2026-07-12', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
+            ('2026-08-09', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
+            ('2026-09-13', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
+            ('2026-10-11', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
             ('2026-11-08', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
             ('2026-12-13', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
             ('2027-01-10', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
             ('2027-02-14', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
             ('2027-03-14', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
+            ('2027-04-11', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
         ]
         
         for date_str, start, end, meeting in greenwich_dates:
