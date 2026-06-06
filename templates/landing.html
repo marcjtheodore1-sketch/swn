@@ -83,8 +83,7 @@
         {% if following_walk and following_walk_location %}
         <div class="mt-3">
             <a href="{{ url_for('location', location_id=following_walk.location_id, event=following_walk.id) }}"
-               class="inline-flex items-center px-5 py-2 bg-white text-swn-purple border-2 border-swn-purple rounded-full font-semibold text-base hover:bg-swn-purple hover:text-white transition-all">
-                <span class="mr-2">📅</span>
+               class="inline-flex items-center px-5 py-2 bg-white text-swn-purple border-2 border-swn-purple rounded-full font-semibold text-base hover:bg-purple-700 hover:text-white hover:border-purple-700 transition-all">
                 Then: {{ following_walk_location.name }} — {{ following_walk.walk_date.strftime('%-d %B') }} at {{ following_walk.start_time }}
                 <span class="ml-2">→</span>
             </a>
