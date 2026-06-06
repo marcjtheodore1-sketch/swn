@@ -28,42 +28,14 @@
         textarea.input {
             min-height: 100px;
         }
-        /* Gentle flag-in-the-wind effect for the header logo */
-        .flag-wave {
-            filter: url(#swn-flag-wave);
-            animation: swn-flag-sway 7s ease-in-out infinite;
-            transform-origin: left center;
-        }
-        @keyframes swn-flag-sway {
-            0%, 100% { transform: rotate(0deg) skewY(0deg); }
-            30%      { transform: rotate(-1.2deg) skewY(1deg); }
-            60%      { transform: rotate(1deg) skewY(-0.8deg); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .flag-wave { animation: none; filter: none; }
-        }
     </style>
 </head>
 <body class="min-h-screen bg-swn-cream">
-    <!-- SVG displacement filter that gives the header logo a soft cloth ripple -->
-    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-        <defs>
-            <filter id="swn-flag-wave">
-                <feTurbulence type="fractalNoise" baseFrequency="0.008 0.022" numOctaves="2" seed="3" result="noise">
-                    <animate attributeName="baseFrequency" dur="12s"
-                             values="0.008 0.022; 0.013 0.030; 0.008 0.022"
-                             repeatCount="indefinite" />
-                </feTurbulence>
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="9"
-                                   xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-        </defs>
-    </svg>
     <header class="bg-swn-purple text-white py-4">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between">
                 <a href="{{ url_for('landing') }}" class="flex items-center">
-                    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="SwN" class="rounded flag-wave" style="height: 40px; width: auto;">
+                    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="SwN" class="rounded" style="height: 40px; width: auto;">
                 </a>
                 <nav class="flex space-x-4 text-sm md:text-base md:space-x-6">
                     <a href="{{ url_for('landing') }}" class="hover:text-swn-teal transition-colors">Home</a>

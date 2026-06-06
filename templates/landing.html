@@ -1,13 +1,44 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    /* Subtle gradient shimmer that radiates through the title fill.
+       The letters do not move — only the fill colour sweeps across. */
+    .swn-shimmer-title {
+        background: linear-gradient(
+            100deg,
+            #6B46C1 0%,
+            #6B46C1 38%,
+            #a78bfa 50%,
+            #6B46C1 62%,
+            #6B46C1 100%
+        );
+        background-size: 220% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        animation: swn-shimmer 6s linear infinite;
+    }
+    @keyframes swn-shimmer {
+        0%   { background-position: 130% 0; }
+        100% { background-position: -130% 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .swn-shimmer-title {
+            animation: none;
+            -webkit-text-fill-color: #6B46C1;
+            color: #6B46C1;
+        }
+    }
+</style>
 <div class="container mx-auto px-4 py-12">
     <!-- Hero Section -->
     <div class="text-center mb-16">
         <div class="mb-8">
-            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Strolling with Neurokin Logo" class="mx-auto rounded-lg shadow-lg flag-wave" style="max-width: 349px;">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Strolling with Neurokin Logo" class="mx-auto rounded-lg shadow-lg" style="max-width: 349px;">
         </div>
-        <h1 class="text-5xl md:text-6xl font-bold text-swn-purple mb-6">
+        <h1 class="text-5xl md:text-6xl font-bold mb-6 swn-shimmer-title">
             Strolling with Neurokin
         </h1>
         <p class="text-2xl text-gray-600 mb-4">(SwN)</p>
