@@ -18,7 +18,10 @@
         background-clip: text;
         -webkit-text-fill-color: transparent;
         color: transparent;
-        animation: swn-shimmer 6s linear infinite;
+        animation: swn-shimmer 14s linear infinite;
+        /* room for descenders (e.g. the "g") which text-6xl's tight line-height clips */
+        line-height: 1.2;
+        padding-bottom: 0.12em;
     }
     @keyframes swn-shimmer {
         0%   { background-position: 130% 0; }
@@ -41,7 +44,6 @@
         <h1 class="text-5xl md:text-6xl font-bold mb-6 swn-shimmer-title">
             Strolling with Neurokin
         </h1>
-        <p class="text-2xl text-gray-600 mb-4">(SwN)</p>
         <p class="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed mb-6">
             Gentle, inclusive strolls through London for the autism community. 
             Whether you're autistic yourself, a family member, carer, or ally — 
