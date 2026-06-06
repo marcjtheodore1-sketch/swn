@@ -34,6 +34,23 @@
             color: #6B46C1;
         }
     }
+    /* Gentle pulse for the next-stroll badge */
+    .swn-pulse {
+        animation: swn-pulse 2.6s ease-in-out infinite;
+    }
+    @keyframes swn-pulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 10px 15px -3px rgba(107, 70, 193, 0.3);
+        }
+        50% {
+            transform: scale(1.035);
+            box-shadow: 0 16px 26px -6px rgba(107, 70, 193, 0.5);
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .swn-pulse { animation: none; }
+    }
 </style>
 <div class="container mx-auto px-4 py-12">
     <!-- Hero Section -->
@@ -56,13 +73,23 @@
         
         {% if next_walk and next_walk_location %}
         <div class="mt-4">
-            <a href="{{ url_for('location', location_id=next_walk.location_id, event=next_walk.id) }}" 
-               class="inline-flex items-center px-6 py-3 bg-swn-purple text-white rounded-full font-semibold text-lg hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl">
+            <a href="{{ url_for('location', location_id=next_walk.location_id, event=next_walk.id) }}"
+               class="swn-pulse inline-flex items-center px-6 py-3 bg-swn-purple text-white rounded-full font-semibold text-lg hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl">
                 <span class="mr-2">🏃</span>
                 Next Stroll: {{ next_walk_location.name }} — {{ next_walk.walk_date.strftime('%-d %B') }} at {{ next_walk.start_time }}
                 <span class="ml-2">→</span>
             </a>
         </div>
+        {% if following_walk and following_walk_location %}
+        <div class="mt-3">
+            <a href="{{ url_for('location', location_id=following_walk.location_id, event=following_walk.id) }}"
+               class="inline-flex items-center px-5 py-2 bg-white text-swn-purple border-2 border-swn-purple rounded-full font-semibold text-base hover:bg-swn-purple hover:text-white transition-all">
+                <span class="mr-2">📅</span>
+                Then: {{ following_walk_location.name }} — {{ following_walk.walk_date.strftime('%-d %B') }} at {{ following_walk.start_time }}
+                <span class="ml-2">→</span>
+            </a>
+        </div>
+        {% endif %}
         {% endif %}
     </div>
 

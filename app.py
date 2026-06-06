@@ -824,18 +824,32 @@ def landing():
     """Home page"""
     today = date.today()
     
-    # Get the next upcoming advertised walk
-    next_walk = WalkEvent.query.filter(
+    # Get the next two upcoming advertised walks
+    upcoming_walks = WalkEvent.query.filter(
         WalkEvent.walk_date >= today,
         WalkEvent.is_advertised == True
-    ).order_by(WalkEvent.walk_date).first()
-    
-    # Get location details for the next walk
+    ).order_by(WalkEvent.walk_date).limit(2).all()
+
+    # Next walk + its location details
+    next_walk = upcoming_walks[0] if upcoming_walks else None
     next_walk_location = None
     if next_walk:
         next_walk_location = next((l for l in WALK_LOCATIONS if l['id'] == next_walk.location_id), None)
-    
-    return render_template('landing.html', locations=WALK_LOCATIONS, next_walk=next_walk, next_walk_location=next_walk_location)
+
+    # The walk after that + its location details
+    following_walk = upcoming_walks[1] if len(upcoming_walks) > 1 else None
+    following_walk_location = None
+    if following_walk:
+        following_walk_location = next((l for l in WALK_LOCATIONS if l['id'] == following_walk.location_id), None)
+
+    return render_template(
+        'landing.html',
+        locations=WALK_LOCATIONS,
+        next_walk=next_walk,
+        next_walk_location=next_walk_location,
+        following_walk=following_walk,
+        following_walk_location=following_walk_location
+    )
 
 @app.route('/location/<location_id>')
 def location(location_id):
