@@ -81,6 +81,9 @@
                    {% else %}bg-swn-purple text-white{% endif %}">
                 <span class="mr-2">🏃</span>
                 Next Stroll: {{ next_walk_location.name }} — {{ next_walk.walk_date.strftime('%-d %B') }} at {{ next_walk.start_time }}
+                <span class="ml-3 px-2.5 py-0.5 rounded-full text-sm font-medium bg-black/10">
+                    {% if next_walk.spaces_left <= 0 %}Fully booked{% elif next_walk.spaces_left == 1 %}1 space left{% else %}{{ next_walk.spaces_left }} spaces left{% endif %}
+                </span>
                 <span class="ml-2">→</span>
             </a>
         </div>
@@ -93,6 +96,9 @@
                    {% elif following_walk.location_id == 'greenwich' %}text-pink-400 border-pink-400 hover:bg-pink-400 hover:text-gray-900
                    {% else %}text-swn-purple border-swn-purple{% endif %}">
                 Then: {{ following_walk_location.name }} — {{ following_walk.walk_date.strftime('%-d %B') }} at {{ following_walk.start_time }}
+                <span class="ml-3 px-2.5 py-0.5 rounded-full text-sm font-medium bg-black/10">
+                    {% if following_walk.spaces_left <= 0 %}Fully booked{% elif following_walk.spaces_left == 1 %}1 space left{% else %}{{ following_walk.spaces_left }} spaces left{% endif %}
+                </span>
                 <span class="ml-2">→</span>
             </a>
         </div>

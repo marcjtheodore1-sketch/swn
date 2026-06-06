@@ -140,6 +140,10 @@ class WalkEvent(db.Model):
     def is_full(self):
         return self.registered_count >= self.max_participants
 
+    @property
+    def spaces_left(self):
+        return max(self.max_participants - self.registered_count, 0)
+
 class Registration(db.Model):
     """Walk registrations"""
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
