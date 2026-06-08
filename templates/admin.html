@@ -156,10 +156,26 @@
                                    class="inline-flex items-center px-3 py-1 bg-swn-teal text-white text-sm rounded hover:bg-opacity-90">
                                     View {{ event.registered_count }}
                                 </a>
-                                <a href="{{ url_for('admin_edit_walk', event_id=event.id) }}" 
+                                <a href="{{ url_for('admin_edit_walk', event_id=event.id) }}"
                                    class="inline-flex items-center px-3 py-1 bg-swn-purple text-white text-sm rounded hover:bg-opacity-90">
                                     {% if event.meet_when_where %}Edit{% else %}Add{% endif %}
                                 </a>
+                                {% if event.is_advertised %}
+                                <button type="button"
+                                        class="invite-btn inline-flex items-center px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white text-sm rounded transition-colors"
+                                        data-event-id="{{ event.id }}"
+                                        data-audience="location"
+                                        data-location-name="{{ location.name }}">
+                                    ✉️ Invite past {{ location.name }}
+                                </button>
+                                <button type="button"
+                                        class="invite-btn inline-flex items-center px-3 py-1 bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-sm rounded transition-colors"
+                                        data-event-id="{{ event.id }}"
+                                        data-audience="all"
+                                        data-location-name="{{ location.name }}">
+                                    ✉️ Invite all past attendees
+                                </button>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -222,4 +238,192 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Invite Past Attendees Modal -->
+<div id="invite-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" aria-hidden="true">
+    <div id="invite-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div role="dialog" aria-modal="true" aria-labelledby="invite-title"
+         class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
+        <button type="button" id="invite-close" aria-label="Close"
+                class="absolute top-4 right-5 text-gray-400 hover:text-gray-700 text-3xl leading-none">&times;</button>
+        <h2 id="invite-title" class="text-2xl font-bold text-gray-900 mb-4">Invite past attendees</h2>
+
+        <div id="invite-warning" class="rounded-lg p-4 mb-5 text-sm bg-gray-100 text-gray-700">Loading…</div>
+
+        <form id="invite-form" class="space-y-4">
+            <div>
+                <label for="invite-subject" class="block font-semibold text-gray-800 mb-1.5">Subject</label>
+                <input type="text" id="invite-subject"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+            </div>
+            <div>
+                <label for="invite-body" class="block font-semibold text-gray-800 mb-1.5">
+                    Message <span class="font-normal text-gray-500">(edit freely before sending)</span>
+                </label>
+                <textarea id="invite-body" rows="14"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-sm leading-relaxed resize-y min-h-[200px] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"></textarea>
+            </div>
+
+            <div id="invite-status" class="text-sm min-h-[1.25rem]" role="status" aria-live="polite"></div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" id="invite-cancel"
+                        class="px-6 py-3 rounded-lg font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all">Cancel</button>
+                <button type="submit" id="invite-send"
+                        class="px-6 py-3 rounded-lg font-semibold bg-swn-purple text-white hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Send invite</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    var modal = document.getElementById('invite-modal');
+    if (!modal) return;
+
+    var backdrop  = document.getElementById('invite-backdrop');
+    var closeBtn  = document.getElementById('invite-close');
+    var cancelBtn = document.getElementById('invite-cancel');
+    var titleEl   = document.getElementById('invite-title');
+    var warnEl    = document.getElementById('invite-warning');
+    var subjEl    = document.getElementById('invite-subject');
+    var bodyEl    = document.getElementById('invite-body');
+    var statusEl  = document.getElementById('invite-status');
+    var sendBtn   = document.getElementById('invite-send');
+    var form      = document.getElementById('invite-form');
+
+    var ctx = { eventId: null, audience: null };
+    var preview = null;
+    var trigger = null;
+
+    function setStatus(msg, kind) {
+        statusEl.textContent = msg || '';
+        statusEl.className = 'text-sm min-h-[1.25rem] ' +
+            (kind === 'error' ? 'text-red-600' : kind === 'success' ? 'text-green-700' : 'text-gray-600');
+    }
+
+    function onKeydown(e) { if (e.key === 'Escape') closeModal(); }
+
+    function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', onKeydown);
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', onKeydown);
+        setStatus('', '');
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send invite';
+        if (trigger) trigger.focus();
+    }
+
+    function onInviteClick(e) {
+        var btn = e.currentTarget;
+        trigger = btn;
+        ctx.eventId = btn.getAttribute('data-event-id');
+        ctx.audience = btn.getAttribute('data-audience');
+        var locName = btn.getAttribute('data-location-name');
+
+        titleEl.textContent = ctx.audience === 'location'
+            ? 'Invite past ' + locName + ' attendees'
+            : 'Invite all past attendees';
+
+        warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-gray-100 text-gray-700';
+        warnEl.textContent = 'Loading…';
+        subjEl.value = '';
+        bodyEl.value = '';
+        setStatus('', '');
+        sendBtn.disabled = true;
+        preview = null;
+        openModal();
+        subjEl.focus();
+
+        fetch('/admin/event/' + ctx.eventId + '/invite-preview?audience=' + ctx.audience)
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.error) { warnEl.textContent = d.error; return; }
+                preview = d;
+                subjEl.value = d.subject;
+                bodyEl.value = d.body;
+
+                if (d.test_mode) {
+                    warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-amber-50 text-amber-800 border border-amber-300';
+                    warnEl.innerHTML = '<strong>✅ TEST MODE is ON.</strong> Clicking “Send invite” will send <strong>one test email to ' +
+                        d.test_email + ' only</strong> — no real attendees will be contacted. ' +
+                        '(In live mode this would go to <strong>' + d.recipient_count + '</strong> past attendee(s).)';
+                    sendBtn.disabled = false;
+                } else if (d.recipient_count === 0) {
+                    warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-gray-100 text-gray-700 border border-gray-300';
+                    warnEl.innerHTML = '<strong>No past attendees found</strong> for this audience — there is no one to email.';
+                    sendBtn.disabled = true;
+                } else {
+                    warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-red-50 text-red-700 border border-red-300';
+                    warnEl.innerHTML = '<strong>⚠️ This will email ' + d.recipient_count + ' past attendee(s) for real.</strong> ' +
+                        'This cannot be undone. Please review the message carefully before sending.';
+                    sendBtn.disabled = false;
+                }
+            })
+            .catch(function () {
+                warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-red-50 text-red-700 border border-red-300';
+                warnEl.textContent = 'Could not load the preview. Please close and try again.';
+            });
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!preview) return;
+
+        var confirmMsg = preview.test_mode
+            ? 'TEST MODE: send one test email to ' + preview.test_email + ' only?'
+            : 'Send this invite to ' + preview.recipient_count + ' past attendee(s)? This cannot be undone.';
+        if (!window.confirm(confirmMsg)) return;
+
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Sending…';
+        setStatus('Sending…', '');
+
+        fetch('/admin/event/' + ctx.eventId + '/invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                audience: ctx.audience,
+                subject: subjEl.value.trim(),
+                body: bodyEl.value
+            })
+        }).then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, data: d }; });
+        }).then(function (res) {
+            if (res.ok) {
+                setStatus(res.data.message, 'success');
+                sendBtn.textContent = 'Sent ✓';
+                setTimeout(closeModal, 5000);
+            } else {
+                setStatus((res.data && res.data.error) || 'Something went wrong.', 'error');
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send invite';
+            }
+        }).catch(function () {
+            setStatus('Network error. Please try again.', 'error');
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send invite';
+        });
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', closeModal);
+
+    var btns = document.querySelectorAll('.invite-btn');
+    for (var i = 0; i < btns.length; i++) {
+        btns[i].addEventListener('click', onInviteClick);
+    }
+})();
+</script>
 {% endblock %}

@@ -43,6 +43,14 @@ app.config['ADMIN_EMAIL'] = 'londonautismgroupcharity@gmail.com'
 # Inbox that receives "Share Your Experience" testimonial submissions
 app.config['TESTIMONIAL_EMAIL'] = os.environ.get('TESTIMONIAL_EMAIL', 'contact@londonautismgroupcharity.org')
 
+# Invite-past-attendees feature.
+# While testing, INVITE_TEST_MODE keeps invites SAFE: every invite is sent only to
+# INVITE_TEST_EMAIL (never to real registrants). Defaults to ON so local/test runs
+# can never email real people by accident. Set INVITE_TEST_MODE=false in production
+# (PythonAnywhere Web tab) only when you are ready to email real past attendees.
+app.config['INVITE_TEST_MODE'] = os.environ.get('INVITE_TEST_MODE', 'true').lower() == 'true'
+app.config['INVITE_TEST_EMAIL'] = os.environ.get('INVITE_TEST_EMAIL', 'londonautismgroupcharity@gmail.com')
+
 db = SQLAlchemy(app)
 
 # ============================================================================
@@ -735,6 +743,75 @@ London Autism Group Charity
     
     print(f"[INFO] Update notifications sent: {success_count} successful, {fail_count} failed")
 
+def get_invite_recipients(event, audience):
+    """Distinct, lower-cased emails of people who previously registered.
+
+    audience='location' -> anyone who registered for a walk in this event's location
+    audience='all'      -> anyone who registered for any walk
+    People already registered for THIS event are excluded (no point inviting them).
+    """
+    query = Registration.query.filter(Registration.cancelled_at.is_(None))
+    if audience == 'location':
+        query = query.join(WalkEvent).filter(WalkEvent.location_id == event.location_id)
+
+    emails = set()
+    for reg in query.all():
+        if reg.email:
+            emails.add(reg.email.strip().lower())
+
+    # Exclude people already booked onto this specific walk
+    already = {
+        reg.email.strip().lower()
+        for reg in Registration.query.filter_by(event_id=event.id, cancelled_at=None).all()
+        if reg.email
+    }
+    return sorted(emails - already)
+
+def build_invite_draft(event, location, audience):
+    """Build the default (editable) subject + body for an invite email."""
+    register_url = url_for('location', location_id=event.location_id, event=event.id, _external=True)
+    date_long = event.walk_date.strftime('%A, %d %B %Y')
+    date_short = event.walk_date.strftime('%-d %B')
+
+    spaces = event.spaces_left
+    if spaces == 1:
+        spaces_text = "There is just 1 space left"
+    else:
+        spaces_text = f"There are {spaces} spaces left"
+
+    if audience == 'location':
+        thanks = f"Thank you for joining us for a previous Strolling with Neurokin walk in {location['name']}!"
+    else:
+        thanks = "Thank you for joining us for a previous Strolling with Neurokin walk!"
+
+    # Pull the walk details the leader has already added (falls back to meeting point)
+    details = (event.full_description or event.meeting_point or '').strip()
+
+    subject = f"An upcoming Strolling with Neurokin walk in {location['name']} — {date_short}"
+
+    body = f"""Hi there,
+
+{thanks}
+
+We thought you'd like to know about an upcoming walk you might enjoy joining:
+
+{location['name']} — {date_long}
+Time: {event.start_time} - {event.end_time}
+Walk Leader: {location['facilitator']}
+
+{details}
+
+{spaces_text}, so if you'd like to come along, you can register here:
+{register_url}
+
+We'd love to see you there!
+
+Warm wishes,
+The Strolling with Neurokin Team
+London Autism Group Charity
+"""
+    return subject, body
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
@@ -1211,6 +1288,79 @@ def admin_toggle_advertised(event_id):
     
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/event/<event_id>/invite-preview')
+@admin_required
+def admin_invite_preview(event_id):
+    """Return the recipient count + editable draft for an invite email (JSON)."""
+    event = WalkEvent.query.get_or_404(event_id)
+    location = next((l for l in WALK_LOCATIONS if l['id'] == event.location_id), None)
+
+    audience = request.args.get('audience')
+    if audience not in ('location', 'all'):
+        return jsonify({'error': 'Invalid audience'}), 400
+
+    recipients = get_invite_recipients(event, audience)
+    subject, body = build_invite_draft(event, location, audience)
+
+    return jsonify({
+        'recipient_count': len(recipients),
+        'subject': subject,
+        'body': body,
+        'location_name': location['name'],
+        'spaces_left': event.spaces_left,
+        'test_mode': app.config['INVITE_TEST_MODE'],
+        'test_email': app.config['INVITE_TEST_EMAIL'],
+    })
+
+@app.route('/admin/event/<event_id>/invite', methods=['POST'])
+@admin_required
+def admin_send_invites(event_id):
+    """Send the (possibly edited) invite email to past attendees.
+
+    In INVITE_TEST_MODE every message goes only to INVITE_TEST_EMAIL, never to
+    real registrants, so testing is safe.
+    """
+    event = WalkEvent.query.get_or_404(event_id)
+
+    data = request.get_json(silent=True) or {}
+    audience = data.get('audience')
+    subject = (data.get('subject') or '').strip()
+    body = (data.get('body') or '').strip()
+
+    if audience not in ('location', 'all'):
+        return jsonify({'error': 'Invalid audience'}), 400
+    if not subject or not body:
+        return jsonify({'error': 'Please provide both a subject and a message before sending.'}), 400
+
+    recipients = get_invite_recipients(event, audience)
+    would_count = len(recipients)
+
+    test_mode = app.config['INVITE_TEST_MODE']
+    test_email = app.config['INVITE_TEST_EMAIL']
+    send_list = [test_email] if test_mode else recipients
+
+    sent = 0
+    for to_email in send_list:
+        if send_email(to_email, subject, body):
+            sent += 1
+
+    if test_mode:
+        message = (f"TEST MODE: a test invite was sent to {test_email} only. "
+                   f"No real attendees were emailed. In live mode this would have gone to "
+                   f"{would_count} past attendee(s).")
+    else:
+        message = f"Invite sent to {sent} of {would_count} past attendee(s)."
+
+    print(f"[INFO] Invite ({audience}) for event {event.id}: test_mode={test_mode}, "
+          f"would_count={would_count}, actually_sent={sent}")
+
+    return jsonify({
+        'message': message,
+        'test_mode': test_mode,
+        'would_count': would_count,
+        'sent': sent,
+    })
 
 @app.route('/admin/archive')
 @admin_required
