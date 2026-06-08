@@ -3,7 +3,7 @@ Strolling with Neurokin (SwN) - Registration System
 London Autism Group Charity
 """
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta, date
 from functools import wraps
@@ -39,6 +39,9 @@ app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'Moonlight')
 
 # Admin notification email
 app.config['ADMIN_EMAIL'] = 'londonautismgroupcharity@gmail.com'
+
+# Inbox that receives "Share Your Experience" testimonial submissions
+app.config['TESTIMONIAL_EMAIL'] = os.environ.get('TESTIMONIAL_EMAIL', 'contact@londonautismgroupcharity.org')
 
 db = SQLAlchemy(app)
 
@@ -944,6 +947,45 @@ def success(registration_id):
 def about():
     """About page"""
     return render_template('about.html', locations=WALK_LOCATIONS)
+
+@app.route('/api/testimonial', methods=['POST'])
+def submit_testimonial():
+    """Receive a 'Share Your Experience' testimonial and email it to the charity"""
+    data = request.get_json(silent=True) or {}
+
+    testimonial = (data.get('testimonial') or '').strip()
+    attribution = (data.get('attribution') or '').strip()
+    name = (data.get('name') or '').strip()
+    email = (data.get('email') or '').strip()
+
+    # A testimonial body is the only required field
+    if not testimonial:
+        return jsonify({'error': 'Please share your experience before submitting.'}), 400
+
+    # Work out how the person wants to be credited
+    if not attribution or attribution == 'Anonymously':
+        attribution_label = 'Anonymously'
+        credit = 'Anonymous'
+    else:
+        attribution_label = attribution
+        credit = name if name else '(no name provided)'
+
+    subject = "New SwN Testimonial Submission"
+    body = f"""A new testimonial has been submitted via the Strolling with Neurokin website.
+
+How they would like to be credited: {attribution_label}
+Name / label: {credit}
+Contact email: {email if email else '(not provided)'}
+
+Testimonial:
+{testimonial}
+"""
+
+    sent = send_email(app.config['TESTIMONIAL_EMAIL'], subject, body)
+
+    if sent:
+        return jsonify({'message': 'Thank you! Your message has been sent.'}), 200
+    return jsonify({'error': 'Sorry, something went wrong sending your message. Please try again later.'}), 500
 
 # ============================================================================
 # MY BOOKINGS ROUTES

@@ -211,6 +211,21 @@
         </div>
     </div>
 
+    <!-- Share Your Experience -->
+    <div class="max-w-3xl mx-auto text-center mb-12">
+        <div class="card bg-swn-purple/5 border-2 border-swn-purple shadow-md">
+            <h3 class="text-xl font-bold text-swn-purple mb-2">Been on a stroll with us?</h3>
+            <p class="text-gray-700 mb-4">
+                We'd love to hear how you found it. Your words help others in the community
+                feel welcome to join.
+            </p>
+            <button type="button" id="testimonial-open"
+                    class="inline-block bg-swn-purple text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-all shadow">
+                ✍️ Share Your Experience
+            </button>
+        </div>
+    </div>
+
     <!-- Accessibility Note -->
     <div class="max-w-3xl mx-auto text-center">
         <div class="card bg-swn-teal/10 border-swn-teal">
@@ -223,4 +238,231 @@
         </div>
     </div>
 </div>
+
+<!-- Share Your Experience Modal -->
+<div id="testimonial-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" aria-hidden="true">
+    <div id="testimonial-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div role="dialog" aria-modal="true" aria-labelledby="testimonial-title"
+         class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 max-h-[90vh] overflow-y-auto">
+        <button type="button" id="testimonial-close" aria-label="Close"
+                class="absolute top-4 right-5 text-gray-400 hover:text-gray-700 text-3xl leading-none">&times;</button>
+        <h2 id="testimonial-title" class="text-2xl font-bold text-gray-900 mb-2">✍️ Share Your Experience</h2>
+        <p class="text-gray-600 mb-6 leading-relaxed">
+            Tell us about your time strolling with us. With your permission, your words may be
+            shared on this page to help others feel welcome.
+        </p>
+
+        <form id="testimonial-form" class="space-y-5" novalidate>
+            <div>
+                <label for="testimonial-text" class="block font-semibold text-gray-800 mb-1.5">
+                    Your experience <span class="text-red-500" aria-hidden="true">*</span>
+                </label>
+                <textarea id="testimonial-text" name="testimonial" required rows="6"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-base resize-y min-h-[150px] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          placeholder="What was your experience like?"></textarea>
+            </div>
+
+            <fieldset class="border border-gray-200 rounded-lg px-4 pb-4 pt-2">
+                <legend class="px-2 font-semibold text-gray-800">How would you like to be credited?</legend>
+                <div class="space-y-2.5">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="radio" name="attribution" value="Anonymously" checked
+                               class="w-5 h-5 accent-swn-purple">
+                        <span class="text-gray-800">Anonymously</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="radio" name="attribution" value="First name only"
+                               class="w-5 h-5 accent-swn-purple">
+                        <span class="text-gray-800">First name only</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="radio" name="attribution" value="Full name"
+                               class="w-5 h-5 accent-swn-purple">
+                        <span class="text-gray-800">Full name</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="radio" name="attribution" value="Something else"
+                               class="w-5 h-5 accent-swn-purple">
+                        <span class="text-gray-800">Something else</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <div id="testimonial-name-wrap" class="hidden">
+                <label id="testimonial-name-label" for="testimonial-name" class="block font-semibold text-gray-800 mb-1.5"></label>
+                <input type="text" id="testimonial-name" name="name"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+            </div>
+
+            <div>
+                <label for="testimonial-email" class="block font-semibold text-gray-800 mb-1.5">
+                    Your email <span class="font-normal text-swn-purple">(optional — so we can verify your message)</span>
+                </label>
+                <input type="email" id="testimonial-email" name="email"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                       placeholder="you@example.com">
+            </div>
+
+            <div id="testimonial-status" class="text-sm min-h-[1.25rem]" role="status" aria-live="polite"></div>
+
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="button" id="testimonial-cancel"
+                        class="px-6 py-3 rounded-lg font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all">Cancel</button>
+                <button type="submit" id="testimonial-submit"
+                        class="px-6 py-3 rounded-lg font-semibold bg-swn-purple text-white hover:bg-purple-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    var modal = document.getElementById('testimonial-modal');
+    if (!modal) return;
+
+    var openBtn   = document.getElementById('testimonial-open');
+    var closeBtn  = document.getElementById('testimonial-close');
+    var cancelBtn = document.getElementById('testimonial-cancel');
+    var backdrop  = document.getElementById('testimonial-backdrop');
+    var form      = document.getElementById('testimonial-form');
+    var textarea  = document.getElementById('testimonial-text');
+    var nameWrap  = document.getElementById('testimonial-name-wrap');
+    var nameLabel = document.getElementById('testimonial-name-label');
+    var nameInput = document.getElementById('testimonial-name');
+    var emailIn   = document.getElementById('testimonial-email');
+    var statusEl  = document.getElementById('testimonial-status');
+    var submitBtn = document.getElementById('testimonial-submit');
+
+    var ATTR_FIELD = {
+        'First name only': { label: 'Your first name', placeholder: 'e.g. Alex' },
+        'Full name':       { label: 'Your full name',  placeholder: 'e.g. Alex Smith' },
+        'Something else':  { label: 'How should we credit you?', placeholder: 'e.g. "A regular attendee" or your initials' }
+    };
+
+    function updateNameField() {
+        var choice = form.querySelector('input[name="attribution"]:checked');
+        var value = choice ? choice.value : 'Anonymously';
+        var cfg = ATTR_FIELD[value];
+        if (cfg) {
+            nameLabel.textContent = cfg.label;
+            nameInput.placeholder = cfg.placeholder;
+            nameInput.required = true;
+            nameWrap.classList.remove('hidden');
+        } else {
+            // Anonymously
+            nameWrap.classList.add('hidden');
+            nameInput.required = false;
+            nameInput.value = '';
+        }
+    }
+
+    function setStatus(msg, kind) {
+        statusEl.textContent = msg || '';
+        statusEl.className = 'text-sm min-h-[1.25rem] ' +
+            (kind === 'error' ? 'text-red-600' : kind === 'success' ? 'text-green-700' : 'text-gray-600');
+    }
+
+    function trapFocus(e) {
+        if (e.key !== 'Tab') return;
+        var focusable = modal.querySelectorAll(
+            'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        );
+        focusable = Array.prototype.filter.call(focusable, function (el) { return el.offsetParent !== null; });
+        if (!focusable.length) return;
+        var first = focusable[0], last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault(); first.focus();
+        }
+    }
+
+    function onKeydown(e) {
+        if (e.key === 'Escape') { closeModal(); return; }
+        trapFocus(e);
+    }
+
+    function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', onKeydown);
+        setStatus('', '');
+        updateNameField();
+        textarea.focus();
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', onKeydown);
+        form.reset();
+        updateNameField();
+        setStatus('', '');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+        if (openBtn) openBtn.focus();
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', closeModal);
+    form.addEventListener('change', function (e) {
+        if (e.target && e.target.name === 'attribution') updateNameField();
+    });
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var testimonial = textarea.value.trim();
+        if (!testimonial) {
+            setStatus('Please share your experience before submitting.', 'error');
+            textarea.focus();
+            return;
+        }
+        var choice = form.querySelector('input[name="attribution"]:checked');
+        var attribution = choice ? choice.value : 'Anonymously';
+        if (ATTR_FIELD[attribution] && !nameInput.value.trim()) {
+            setStatus('Please fill in how you would like to be credited.', 'error');
+            nameInput.focus();
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending…';
+        setStatus('Sending…', '');
+
+        fetch('{{ url_for("submit_testimonial") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                testimonial: testimonial,
+                attribution: attribution,
+                name: nameInput.value.trim(),
+                email: emailIn.value.trim()
+            })
+        }).then(function (res) {
+            return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+        }).then(function (result) {
+            if (result.ok) {
+                setStatus('Thank you! Your message has been sent. 💜', 'success');
+                setTimeout(closeModal, 2500);
+            } else {
+                setStatus((result.data && result.data.error) || 'Something went wrong. Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit';
+            }
+        }).catch(function () {
+            setStatus('Network error. Please check your connection and try again.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit';
+        });
+    });
+
+    updateNameField();
+})();
+</script>
 {% endblock %}
