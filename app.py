@@ -12,6 +12,7 @@ import os
 import uuid
 import smtplib
 import threading
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -1338,28 +1339,54 @@ def admin_send_invites(event_id):
 
     test_mode = app.config['INVITE_TEST_MODE']
     test_email = app.config['INVITE_TEST_EMAIL']
-    send_list = [test_email] if test_mode else recipients
+    send_list = [test_email] if test_mode else list(recipients)
 
-    sent = 0
-    for to_email in send_list:
-        if send_email(to_email, subject, body):
-            sent += 1
+    if not send_list:
+        return jsonify({'error': 'There are no past attendees to email for this audience.'}), 400
+
+    # Send in a background thread so the web request returns immediately and a
+    # worker is never tied up, no matter how large the recipient list. Each send
+    # is isolated (one failure can't stop the rest) and gently paced to stay
+    # within the email provider's sending limits.
+    def _send_invites(targets, subj, msg, label, evt_id):
+        with app.app_context():
+            ok = fail = 0
+            for addr in targets:
+                try:
+                    if send_email(addr, subj, msg):
+                        ok += 1
+                    else:
+                        fail += 1
+                except Exception as e:
+                    fail += 1
+                    print(f"[ERROR] Invite send to {addr} failed: {e}")
+                time.sleep(0.4)  # gentle pacing between messages
+            print(f"[INFO] Invite batch ({label}) for event {evt_id} complete: "
+                  f"{ok} sent, {fail} failed, of {len(targets)} target(s)")
+
+    thread = threading.Thread(
+        target=_send_invites,
+        args=(send_list, subject, body, audience, event.id),
+        daemon=True,
+    )
+    thread.start()
 
     if test_mode:
-        message = (f"TEST MODE: a test invite was sent to {test_email} only. "
-                   f"No real attendees were emailed. In live mode this would have gone to "
-                   f"{would_count} past attendee(s).")
+        message = (f"TEST MODE: a test invite is being sent to {test_email} only — "
+                   f"no real attendees were emailed. (In live mode this would go to "
+                   f"{would_count} past attendee(s).) Check that inbox in a moment.")
     else:
-        message = f"Invite sent to {sent} of {would_count} past attendee(s)."
+        message = (f"Sending your invite to {would_count} past attendee(s) now. "
+                   f"They'll arrive over the next few minutes — you can safely leave this page.")
 
-    print(f"[INFO] Invite ({audience}) for event {event.id}: test_mode={test_mode}, "
-          f"would_count={would_count}, actually_sent={sent}")
+    print(f"[INFO] Invite ({audience}) for event {event.id} queued: test_mode={test_mode}, "
+          f"queued={len(send_list)}, would_count={would_count}")
 
     return jsonify({
         'message': message,
         'test_mode': test_mode,
         'would_count': would_count,
-        'sent': sent,
+        'queued': len(send_list),
     })
 
 @app.route('/admin/archive')
