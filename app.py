@@ -13,6 +13,10 @@ import uuid
 import smtplib
 import threading
 import time
+import re
+
+# Basic email format check for manually-added invite recipients
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -1335,7 +1339,26 @@ def admin_send_invites(event_id):
     if not subject or not body:
         return jsonify({'error': 'Please provide both a subject and a message before sending.'}), 400
 
+    # Auto-detected past attendees for this audience...
     recipients = get_invite_recipients(event, audience)
+
+    # ...plus any addresses the admin added manually in the modal (validated + deduped)
+    seen = set(recipients)
+    invalid = []
+    for raw in (data.get('extra_emails') or []):
+        addr = (raw or '').strip().lower()
+        if not addr:
+            continue
+        if not EMAIL_RE.match(addr):
+            invalid.append(raw)
+            continue
+        if addr not in seen:
+            seen.add(addr)
+            recipients.append(addr)
+
+    if invalid:
+        return jsonify({'error': 'These addresses are not valid email addresses: ' + ', '.join(invalid)}), 400
+
     would_count = len(recipients)
 
     test_mode = app.config['INVITE_TEST_MODE']
@@ -1343,7 +1366,7 @@ def admin_send_invites(event_id):
     send_list = [test_email] if test_mode else list(recipients)
 
     if not send_list:
-        return jsonify({'error': 'There are no past attendees to email for this audience.'}), 400
+        return jsonify({'error': 'There are no recipients to email. Add at least one address.'}), 400
 
     # Send in a background thread so the web request returns immediately and a
     # worker is never tied up, no matter how large the recipient list. Each send
@@ -1375,9 +1398,9 @@ def admin_send_invites(event_id):
     if test_mode:
         message = (f"TEST MODE: a test invite is being sent to {test_email} only — "
                    f"no real attendees were emailed. (In live mode this would go to "
-                   f"{would_count} past attendee(s).) Check that inbox in a moment.")
+                   f"{would_count} recipient(s).) Check that inbox in a moment.")
     else:
-        message = (f"Sending your invite to {would_count} past attendee(s) now. "
+        message = (f"Sending your invite to {would_count} recipient(s) now. "
                    f"They'll arrive over the next few minutes — you can safely leave this page.")
 
     print(f"[INFO] Invite ({audience}) for event {event.id} queued: test_mode={test_mode}, "

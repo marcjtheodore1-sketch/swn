@@ -256,6 +256,13 @@
             </div>
             <ul id="invite-recipients-list"
                 class="border border-gray-200 rounded-lg bg-gray-50 max-h-40 overflow-y-auto text-sm text-gray-700 divide-y divide-gray-100"></ul>
+            <div class="flex gap-2 mt-2">
+                <input type="email" id="invite-add-email" placeholder="Add another email address"
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                <button type="button" id="invite-add-btn"
+                        class="px-4 py-2 rounded-lg font-semibold bg-swn-purple text-white hover:bg-purple-700 transition-all text-sm">Add</button>
+            </div>
+            <p id="invite-add-error" class="text-xs text-red-600 mt-1 hidden"></p>
             <p id="invite-recipients-note" class="text-xs text-gray-500 mt-1.5"></p>
         </div>
 
@@ -304,10 +311,98 @@
     var recipList  = document.getElementById('invite-recipients-list');
     var recipCount = document.getElementById('invite-recipients-count');
     var recipNote  = document.getElementById('invite-recipients-note');
+    var addInput   = document.getElementById('invite-add-email');
+    var addBtn     = document.getElementById('invite-add-btn');
+    var addError   = document.getElementById('invite-add-error');
+
+    var EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
     var ctx = { eventId: null, audience: null };
     var preview = null;
+    var addedEmails = [];
     var trigger = null;
+
+    function autoRecipients() {
+        return (preview && preview.recipients) ? preview.recipients : [];
+    }
+    function totalCount() {
+        return autoRecipients().length + addedEmails.length;
+    }
+
+    function renderWarning() {
+        var total = totalCount();
+        if (preview.test_mode) {
+            warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-amber-50 text-amber-800 border border-amber-300';
+            warnEl.innerHTML = '<strong>✅ TEST MODE is ON.</strong> Clicking “Send invite” will send <strong>one test email to ' +
+                preview.test_email + ' only</strong> — no real attendees will be contacted. ' +
+                '(In live mode this would go to <strong>' + total + '</strong> recipient(s).)';
+            sendBtn.disabled = total === 0;
+        } else if (total === 0) {
+            warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-gray-100 text-gray-700 border border-gray-300';
+            warnEl.innerHTML = '<strong>No recipients yet</strong> — add at least one email address below.';
+            sendBtn.disabled = true;
+        } else {
+            warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-red-50 text-red-700 border border-red-300';
+            warnEl.innerHTML = '<strong>⚠️ This will email ' + total + ' recipient(s) for real.</strong> ' +
+                'This cannot be undone. Please review the list and message carefully before sending.';
+            sendBtn.disabled = false;
+        }
+    }
+
+    function renderRecipients() {
+        recipList.innerHTML = '';
+        autoRecipients().forEach(function (em) {
+            var li = document.createElement('li');
+            li.className = 'px-3 py-1.5 break-all';
+            li.textContent = em;
+            recipList.appendChild(li);
+        });
+        addedEmails.forEach(function (em, idx) {
+            var li = document.createElement('li');
+            li.className = 'px-3 py-1.5 break-all flex items-center justify-between gap-2 bg-purple-50';
+            var span = document.createElement('span');
+            span.textContent = em + '  (added)';
+            var rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'text-red-500 hover:text-red-700 text-xl leading-none flex-shrink-0';
+            rm.setAttribute('aria-label', 'Remove ' + em);
+            rm.textContent = '×';
+            rm.addEventListener('click', function () {
+                addedEmails.splice(idx, 1);
+                renderRecipients();
+                renderWarning();
+            });
+            li.appendChild(span);
+            li.appendChild(rm);
+            recipList.appendChild(li);
+        });
+        recipCount.textContent = '(' + totalCount() + ')';
+        recipNote.textContent = preview.test_mode
+            ? 'In TEST MODE only ' + preview.test_email + ' actually receives the email — the list above is who it would reach in live mode.'
+            : 'Each person listed above will receive one email.';
+        recipWrap.classList.remove('hidden');
+    }
+
+    function addEmail() {
+        addError.classList.add('hidden');
+        var val = addInput.value.trim().toLowerCase();
+        if (!val) return;
+        if (!EMAIL_RE.test(val)) {
+            addError.textContent = 'Please enter a valid email address.';
+            addError.classList.remove('hidden');
+            return;
+        }
+        if (autoRecipients().indexOf(val) !== -1 || addedEmails.indexOf(val) !== -1) {
+            addError.textContent = 'That address is already in the list.';
+            addError.classList.remove('hidden');
+            return;
+        }
+        addedEmails.push(val);
+        addInput.value = '';
+        renderRecipients();
+        renderWarning();
+        addInput.focus();
+    }
 
     function setStatus(msg, kind) {
         statusEl.textContent = msg || '';
@@ -352,6 +447,9 @@
         warnEl.textContent = 'Loading…';
         recipWrap.classList.add('hidden');
         recipList.innerHTML = '';
+        addedEmails = [];
+        addInput.value = '';
+        addError.classList.add('hidden');
         subjEl.value = '';
         bodyEl.value = '';
         setStatus('', '');
@@ -368,40 +466,9 @@
                 subjEl.value = d.subject;
                 bodyEl.value = d.body;
 
-                // Populate the recipient list
-                recipList.innerHTML = '';
-                if (d.recipients && d.recipients.length) {
-                    d.recipients.forEach(function (em) {
-                        var li = document.createElement('li');
-                        li.className = 'px-3 py-1.5 break-all';
-                        li.textContent = em;
-                        recipList.appendChild(li);
-                    });
-                    recipCount.textContent = '(' + d.recipient_count + ')';
-                    recipNote.textContent = d.test_mode
-                        ? 'In TEST MODE only ' + d.test_email + ' actually receives the email — the list above is who it would reach in live mode.'
-                        : 'Each person listed above will receive one email.';
-                    recipWrap.classList.remove('hidden');
-                } else {
-                    recipWrap.classList.add('hidden');
-                }
-
-                if (d.test_mode) {
-                    warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-amber-50 text-amber-800 border border-amber-300';
-                    warnEl.innerHTML = '<strong>✅ TEST MODE is ON.</strong> Clicking “Send invite” will send <strong>one test email to ' +
-                        d.test_email + ' only</strong> — no real attendees will be contacted. ' +
-                        '(In live mode this would go to <strong>' + d.recipient_count + '</strong> past attendee(s).)';
-                    sendBtn.disabled = false;
-                } else if (d.recipient_count === 0) {
-                    warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-gray-100 text-gray-700 border border-gray-300';
-                    warnEl.innerHTML = '<strong>No past attendees found</strong> for this audience — there is no one to email.';
-                    sendBtn.disabled = true;
-                } else {
-                    warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-red-50 text-red-700 border border-red-300';
-                    warnEl.innerHTML = '<strong>⚠️ This will email ' + d.recipient_count + ' past attendee(s) for real.</strong> ' +
-                        'This cannot be undone. Please review the message carefully before sending.';
-                    sendBtn.disabled = false;
-                }
+                addedEmails = [];
+                renderRecipients();
+                renderWarning();
             })
             .catch(function () {
                 warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-red-50 text-red-700 border border-red-300';
@@ -415,7 +482,7 @@
 
         var confirmMsg = preview.test_mode
             ? 'TEST MODE: send one test email to ' + preview.test_email + ' only?'
-            : 'Send this invite to ' + preview.recipient_count + ' past attendee(s)? This cannot be undone.';
+            : 'Send this invite to ' + totalCount() + ' recipient(s)? This cannot be undone.';
         if (!window.confirm(confirmMsg)) return;
 
         sendBtn.disabled = true;
@@ -428,7 +495,8 @@
             body: JSON.stringify({
                 audience: ctx.audience,
                 subject: subjEl.value.trim(),
-                body: bodyEl.value
+                body: bodyEl.value,
+                extra_emails: addedEmails
             })
         }).then(function (r) {
             return r.json().then(function (d) { return { ok: r.ok, data: d }; });
@@ -452,6 +520,10 @@
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
     backdrop.addEventListener('click', closeModal);
+    addBtn.addEventListener('click', addEmail);
+    addInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); addEmail(); }
+    });
 
     var btns = document.querySelectorAll('.invite-btn');
     for (var i = 0; i < btns.length; i++) {
