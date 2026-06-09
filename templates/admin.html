@@ -250,6 +250,15 @@
 
         <div id="invite-warning" class="rounded-lg p-4 mb-5 text-sm bg-gray-100 text-gray-700">Loading…</div>
 
+        <div id="invite-recipients-wrap" class="mb-5 hidden">
+            <div class="flex items-center justify-between mb-1.5">
+                <span class="font-semibold text-gray-800">Recipients <span id="invite-recipients-count" class="font-normal text-gray-500"></span></span>
+            </div>
+            <ul id="invite-recipients-list"
+                class="border border-gray-200 rounded-lg bg-gray-50 max-h-40 overflow-y-auto text-sm text-gray-700 divide-y divide-gray-100"></ul>
+            <p id="invite-recipients-note" class="text-xs text-gray-500 mt-1.5"></p>
+        </div>
+
         <form id="invite-form" class="space-y-4">
             <div>
                 <label for="invite-subject" class="block font-semibold text-gray-800 mb-1.5">Subject</label>
@@ -291,6 +300,10 @@
     var statusEl  = document.getElementById('invite-status');
     var sendBtn   = document.getElementById('invite-send');
     var form      = document.getElementById('invite-form');
+    var recipWrap  = document.getElementById('invite-recipients-wrap');
+    var recipList  = document.getElementById('invite-recipients-list');
+    var recipCount = document.getElementById('invite-recipients-count');
+    var recipNote  = document.getElementById('invite-recipients-note');
 
     var ctx = { eventId: null, audience: null };
     var preview = null;
@@ -337,6 +350,8 @@
 
         warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-gray-100 text-gray-700';
         warnEl.textContent = 'Loading…';
+        recipWrap.classList.add('hidden');
+        recipList.innerHTML = '';
         subjEl.value = '';
         bodyEl.value = '';
         setStatus('', '');
@@ -352,6 +367,24 @@
                 preview = d;
                 subjEl.value = d.subject;
                 bodyEl.value = d.body;
+
+                // Populate the recipient list
+                recipList.innerHTML = '';
+                if (d.recipients && d.recipients.length) {
+                    d.recipients.forEach(function (em) {
+                        var li = document.createElement('li');
+                        li.className = 'px-3 py-1.5 break-all';
+                        li.textContent = em;
+                        recipList.appendChild(li);
+                    });
+                    recipCount.textContent = '(' + d.recipient_count + ')';
+                    recipNote.textContent = d.test_mode
+                        ? 'In TEST MODE only ' + d.test_email + ' actually receives the email — the list above is who it would reach in live mode.'
+                        : 'Each person listed above will receive one email.';
+                    recipWrap.classList.remove('hidden');
+                } else {
+                    recipWrap.classList.add('hidden');
+                }
 
                 if (d.test_mode) {
                     warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-amber-50 text-amber-800 border border-amber-300';

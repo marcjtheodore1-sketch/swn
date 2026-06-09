@@ -1306,6 +1306,7 @@ def admin_invite_preview(event_id):
 
     return jsonify({
         'recipient_count': len(recipients),
+        'recipients': recipients,
         'subject': subject,
         'body': body,
         'location_name': location['name'],
