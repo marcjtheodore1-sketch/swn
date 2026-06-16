@@ -6,30 +6,35 @@
        The letters do not move — only the fill colour sweeps across. */
     .swn-shimmer-title {
         background: linear-gradient(
-            100deg,
+            110deg,
             #6B46C1 0%,
-            #6B46C1 38%,
-            #a78bfa 50%,
-            #6B46C1 62%,
+            #6B46C1 28%,
+            #b794f4 42%,
+            #e9d8fd 50%,
+            #b794f4 58%,
+            #6B46C1 72%,
             #6B46C1 100%
         );
-        background-size: 220% 100%;
+        background-size: 250% 100%;
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
         color: transparent;
-        animation: swn-shimmer 14s linear infinite;
+        /* soft radiant glow around the letters */
+        filter: drop-shadow(0 1px 6px rgba(139, 92, 246, 0.32));
+        animation: swn-shimmer 12s linear infinite;
         /* room for descenders (e.g. the "g") which text-6xl's tight line-height clips */
         line-height: 1.2;
         padding-bottom: 0.12em;
     }
     @keyframes swn-shimmer {
-        0%   { background-position: 130% 0; }
-        100% { background-position: -130% 0; }
+        0%   { background-position: 150% 50%; }
+        100% { background-position: -150% 50%; }
     }
     @media (prefers-reduced-motion: reduce) {
         .swn-shimmer-title {
             animation: none;
+            filter: none;
             -webkit-text-fill-color: #6B46C1;
             color: #6B46C1;
         }
@@ -215,6 +220,26 @@
                     </p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Testimonials Carousel -->
+    <div class="max-w-3xl mx-auto mb-12">
+        <h2 class="text-3xl font-bold text-center text-swn-purple mb-8">What People Are Saying</h2>
+        <div id="swn-testimonials" class="card relative overflow-hidden select-none">
+            <span class="absolute top-2 left-4 text-6xl text-swn-purple/15 leading-none" aria-hidden="true">&ldquo;</span>
+            <div class="px-2 sm:px-6 py-4 min-h-[140px] flex items-center justify-center">
+                <blockquote id="swn-tq" class="text-lg md:text-xl text-gray-700 italic text-center leading-relaxed transition-opacity duration-300" aria-live="polite"></blockquote>
+            </div>
+            <div class="flex items-center justify-center gap-4 mt-2">
+                <button type="button" id="swn-tprev" aria-label="Previous quote"
+                        class="text-swn-purple hover:text-purple-700 text-3xl leading-none px-2">&lsaquo;</button>
+                <button type="button" id="swn-tpause"
+                        class="px-3 py-1 rounded-full border border-swn-purple text-swn-purple hover:bg-swn-purple hover:text-white transition-all text-sm font-medium">⏸ Pause</button>
+                <button type="button" id="swn-tnext" aria-label="Next quote"
+                        class="text-swn-purple hover:text-purple-700 text-3xl leading-none px-2">&rsaquo;</button>
+            </div>
+            <div id="swn-tdots" class="flex flex-wrap justify-center gap-1.5 mt-3"></div>
         </div>
     </div>
 
@@ -470,6 +495,106 @@
     });
 
     updateNameField();
+})();
+</script>
+
+<script>
+(function () {
+    var carousel = document.getElementById('swn-testimonials');
+    if (!carousel) return;
+
+    var quotes = [
+        "It was good today — it felt accessible for me and it was interesting to chat to people. Sorted all my social needs for a while, haha!",
+        "Thank you for a lovely walk. It was nice to meet everyone. I'm looking forward to the next one!",
+        "Thank you for organising the walk — it was great to meet you all.",
+        "Such a good day! Thanks so much for leading it, and to everyone I spoke to 😊",
+        "It was a lovely day 😊",
+        "A lovely walk in Hanwell and Perivale.",
+        "Thank you for a lovely walk!",
+        "Thank you so much for another great walk! I very much enjoyed meeting everyone, as always.",
+        "Thanks for a lovely walk. I really enjoyed spending time with everyone today.",
+        "Thanks so much for the lovely walk — we both enjoyed it very much! x",
+        "Thank you for a great day! Even though it was cold, I had a great time walking around with all of you. See you all in a few weeks 🤗",
+        "It was so lovely seeing all of you. Thank you so much for organising the walk — it's definitely a great initiative!"
+    ];
+
+    var qEl     = document.getElementById('swn-tq');
+    var dotsEl  = document.getElementById('swn-tdots');
+    var prevBtn = document.getElementById('swn-tprev');
+    var nextBtn = document.getElementById('swn-tnext');
+    var pauseBtn = document.getElementById('swn-tpause');
+
+    var INTERVAL = 5000;
+    var i = 0;
+    var timer = null;
+    var playing = false;
+
+    // Build dots
+    quotes.forEach(function (_, idx) {
+        var d = document.createElement('button');
+        d.type = 'button';
+        d.className = 'w-2.5 h-2.5 rounded-full transition-colors';
+        d.setAttribute('aria-label', 'Go to quote ' + (idx + 1));
+        d.addEventListener('click', function () { go(idx); restart(); });
+        dotsEl.appendChild(d);
+    });
+    var dots = dotsEl.children;
+
+    function render() {
+        qEl.style.opacity = '0';
+        setTimeout(function () {
+            qEl.textContent = quotes[i];
+            qEl.style.opacity = '1';
+        }, 250);
+        for (var k = 0; k < dots.length; k++) {
+            dots[k].className = 'w-2.5 h-2.5 rounded-full transition-colors ' +
+                (k === i ? 'bg-swn-purple' : 'bg-swn-purple/25 hover:bg-swn-purple/50');
+        }
+    }
+
+    function go(n) { i = (n + quotes.length) % quotes.length; render(); }
+    function next() { go(i + 1); }
+    function prev() { go(i - 1); }
+
+    function start() {
+        if (timer) clearInterval(timer);
+        timer = setInterval(next, INTERVAL);
+        playing = true;
+        pauseBtn.textContent = '⏸ Pause';
+        pauseBtn.setAttribute('aria-label', 'Pause auto-play');
+    }
+    function stop() {
+        clearInterval(timer);
+        timer = null;
+        playing = false;
+        pauseBtn.textContent = '▶ Play';
+        pauseBtn.setAttribute('aria-label', 'Resume auto-play');
+    }
+    function restart() { if (playing) start(); }   // reset the 5s clock after manual nav
+    function toggle() { playing ? stop() : start(); }
+
+    prevBtn.addEventListener('click', function () { prev(); restart(); });
+    nextBtn.addEventListener('click', function () { next(); restart(); });
+    pauseBtn.addEventListener('click', toggle);
+
+    // Touch swipe (mobile)
+    var x0 = null;
+    carousel.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    carousel.addEventListener('touchend', function (e) {
+        if (x0 === null) return;
+        var dx = e.changedTouches[0].clientX - x0;
+        if (Math.abs(dx) > 40) { (dx < 0 ? next() : prev()); restart(); }
+        x0 = null;
+    }, { passive: true });
+
+    render();
+
+    // Auto-play unless the visitor prefers reduced motion
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        stop();
+    } else {
+        start();
+    }
 })();
 </script>
 {% endblock %}
