@@ -5,31 +5,36 @@
     /* Subtle gradient shimmer that radiates through the title fill.
        The letters do not move — only the fill colour sweeps across. */
     .swn-shimmer-title {
+        /* Several soft purple waves that flow across the letters (no white) */
         background: linear-gradient(
-            110deg,
-            #6B46C1 0%,
-            #6B46C1 28%,
-            #b794f4 42%,
-            #e9d8fd 50%,
-            #b794f4 58%,
-            #6B46C1 72%,
-            #6B46C1 100%
+            100deg,
+            #5b3aa8 0%,
+            #6B46C1 11%,
+            #9f7aea 22%,
+            #6B46C1 33%,
+            #b794f4 44%,
+            #7c5cd6 50%,
+            #b794f4 56%,
+            #6B46C1 67%,
+            #9f7aea 78%,
+            #6B46C1 89%,
+            #5b3aa8 100%
         );
-        background-size: 250% 100%;
+        background-size: 200% 100%;
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
         color: transparent;
         /* soft radiant glow around the letters */
-        filter: drop-shadow(0 1px 6px rgba(139, 92, 246, 0.32));
-        animation: swn-shimmer 12s linear infinite;
+        filter: drop-shadow(0 1px 5px rgba(139, 92, 246, 0.30));
+        animation: swn-shimmer 9s linear infinite;
         /* room for descenders (e.g. the "g") which text-6xl's tight line-height clips */
         line-height: 1.2;
         padding-bottom: 0.12em;
     }
     @keyframes swn-shimmer {
-        0%   { background-position: 150% 50%; }
-        100% { background-position: -150% 50%; }
+        0%   { background-position: 0% 50%; }
+        100% { background-position: -200% 50%; }
     }
     @media (prefers-reduced-motion: reduce) {
         .swn-shimmer-title {
@@ -224,22 +229,23 @@
     </div>
 
     <!-- Testimonials Carousel -->
-    <div class="max-w-3xl mx-auto mb-12">
-        <h2 class="text-3xl font-bold text-center text-swn-purple mb-8">What People Are Saying</h2>
-        <div id="swn-testimonials" class="card relative overflow-hidden select-none">
-            <span class="absolute top-2 left-4 text-6xl text-swn-purple/15 leading-none" aria-hidden="true">&ldquo;</span>
-            <div class="px-2 sm:px-6 py-4 min-h-[140px] flex items-center justify-center">
-                <blockquote id="swn-tq" class="text-lg md:text-xl text-gray-700 italic text-center leading-relaxed transition-opacity duration-300" aria-live="polite"></blockquote>
-            </div>
-            <div class="flex items-center justify-center gap-4 mt-2">
+    <div class="max-w-2xl mx-auto mb-10">
+        <h2 class="text-2xl font-bold text-center text-swn-purple mb-4">What People Are Saying</h2>
+        <div id="swn-testimonials" class="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-5 select-none">
+            <div class="flex items-center justify-center gap-3">
                 <button type="button" id="swn-tprev" aria-label="Previous quote"
-                        class="text-swn-purple hover:text-purple-700 text-3xl leading-none px-2">&lsaquo;</button>
-                <button type="button" id="swn-tpause"
-                        class="px-3 py-1 rounded-full border border-swn-purple text-swn-purple hover:bg-swn-purple hover:text-white transition-all text-sm font-medium">⏸ Pause</button>
+                        class="text-swn-purple hover:text-purple-700 text-3xl leading-none flex-shrink-0">&lsaquo;</button>
+                <blockquote id="swn-tq"
+                            class="flex-1 text-base md:text-lg text-gray-700 italic text-center leading-relaxed transition-opacity duration-300 min-h-[64px] flex items-center justify-center"
+                            aria-live="polite"></blockquote>
                 <button type="button" id="swn-tnext" aria-label="Next quote"
-                        class="text-swn-purple hover:text-purple-700 text-3xl leading-none px-2">&rsaquo;</button>
+                        class="text-swn-purple hover:text-purple-700 text-3xl leading-none flex-shrink-0">&rsaquo;</button>
             </div>
-            <div id="swn-tdots" class="flex flex-wrap justify-center gap-1.5 mt-3"></div>
+            <div class="flex items-center justify-center gap-3 mt-3">
+                <div id="swn-tdots" class="flex flex-wrap justify-center gap-1.5"></div>
+                <button type="button" id="swn-tpause"
+                        class="ml-1 px-2.5 py-1 rounded-full border border-swn-purple/60 text-swn-purple hover:bg-swn-purple hover:text-white transition-all text-xs font-semibold">⏸ Pause</button>
+            </div>
         </div>
     </div>
 
@@ -533,7 +539,7 @@
     quotes.forEach(function (_, idx) {
         var d = document.createElement('button');
         d.type = 'button';
-        d.className = 'w-2.5 h-2.5 rounded-full transition-colors';
+        d.className = 'h-2 w-2 rounded-full transition-all bg-gray-300';
         d.setAttribute('aria-label', 'Go to quote ' + (idx + 1));
         d.addEventListener('click', function () { go(idx); restart(); });
         dotsEl.appendChild(d);
@@ -547,8 +553,8 @@
             qEl.style.opacity = '1';
         }, 250);
         for (var k = 0; k < dots.length; k++) {
-            dots[k].className = 'w-2.5 h-2.5 rounded-full transition-colors ' +
-                (k === i ? 'bg-swn-purple' : 'bg-swn-purple/25 hover:bg-swn-purple/50');
+            dots[k].className = 'h-2 rounded-full transition-all ' +
+                (k === i ? 'w-5 bg-swn-purple' : 'w-2 bg-gray-300 hover:bg-swn-purple/60');
         }
     }
 
