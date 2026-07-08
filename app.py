@@ -40,7 +40,7 @@ app.config['SMTP_FROM'] = os.environ.get('SMTP_FROM', 'bookings@example.com')
 app.config['ENABLE_EMAIL'] = os.environ.get('ENABLE_EMAIL', 'false').lower() == 'true'
 
 # Admin password
-app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'Moonlight')
+app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'Yesterday')
 
 # Admin notification email
 app.config['ADMIN_EMAIL'] = 'londonautismgroupcharity@gmail.com'
