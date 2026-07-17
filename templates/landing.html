@@ -61,8 +61,105 @@
     @media (prefers-reduced-motion: reduce) {
         .swn-pulse { animation: none; }
     }
+
+    .news-ticker {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        flex-wrap: wrap;
+        background: #ede9fe;
+        border: 1px solid #c4b5fd;
+        border-radius: 0.75rem;
+        padding: 0.8rem 1rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 0 0 rgba(107, 70, 193, 0);
+        animation: news-ticker-glow 2.8s ease-in-out infinite;
+    }
+    .news-ticker-badge {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        background: #6B46C1;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        animation: news-ticker-pulse 1.6s ease-in-out infinite;
+    }
+    .news-ticker-rotator { flex: 1 1 240px; min-width: 0; }
+    .news-ticker-item {
+        display: none;
+        margin: 0;
+        color: #4c1d95;
+        font-size: 1.05rem;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+    .news-ticker-item.is-active { display: block; animation: news-ticker-fade 0.5s ease; }
+    .news-ticker-item a { color: #5b21b6; font-weight: 700; text-decoration: underline; }
+    .news-ticker-item a:hover { color: #3b0764; }
+    .news-ticker-controls { flex-shrink: 0; display: flex; align-items: center; gap: 0.4rem; margin-left: auto; }
+    .news-ticker-dot {
+        width: 9px;
+        height: 9px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: #c4b5fd;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .news-ticker-dot.is-active { background: #6B46C1; transform: scale(1.25); }
+    .news-ticker-pause {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 0.25rem;
+        padding: 0;
+        border: 1px solid #a78bfa;
+        border-radius: 999px;
+        background: white;
+        color: #6B46C1;
+        cursor: pointer;
+    }
+    .news-ticker-pause:hover, .news-ticker-pause.is-paused { background: #6B46C1; color: white; }
+    @keyframes news-ticker-fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes news-ticker-pulse {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(107, 70, 193, 0.45); }
+        50% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(107, 70, 193, 0); }
+    }
+    @keyframes news-ticker-glow {
+        0%, 100% { box-shadow: 0 0 0 rgba(107, 70, 193, 0); }
+        50% { box-shadow: 0 0 14px rgba(107, 70, 193, 0.28); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .news-ticker, .news-ticker-badge { animation: none; }
+        .news-ticker-item { display: block; animation: none; }
+        .news-ticker-item + .news-ticker-item { margin-top: 0.55rem; padding-top: 0.55rem; border-top: 1px solid #c4b5fd; }
+        .news-ticker-controls { display: none; }
+    }
+    @media (max-width: 480px) { .news-ticker-item { font-size: 0.95rem; } }
 </style>
 <div class="container mx-auto px-4 py-12">
+    {% if news_ticker_items %}
+    <section class="news-ticker" id="news-ticker" role="region" aria-label="Latest news">
+        <span class="news-ticker-badge">📣 Latest News</span>
+        <div class="news-ticker-rotator" id="news-ticker-rotator" aria-live="polite">
+            {% for item in news_ticker_items %}
+            <p class="news-ticker-item{% if loop.first %} is-active{% endif %}">
+                {% if item.emoji %}{{ item.emoji }} {% endif %}{% if item.headline %}<strong>{{ item.headline }}</strong>{% endif %}{% if item.details %} {{ item.details }}{% endif %}{% if item.link_url and item.link_text %} <a href="{{ item.link_url }}" target="_blank" rel="noopener">{{ item.link_text }}</a>{% endif %}
+            </p>
+            {% endfor %}
+        </div>
+        <div class="news-ticker-controls" id="news-ticker-controls" role="tablist" aria-label="Choose a news item"></div>
+    </section>
+    {% endif %}
+
     <!-- Hero Section -->
     <div class="text-center mb-16">
         <div class="mb-8">
@@ -186,14 +283,15 @@
     </div>
 
     <!-- Location Selection -->
-    <div class="mb-12">
-        <h2 class="text-3xl font-bold text-center text-swn-purple mb-8">Choose Your Stroll</h2>
-        <div class="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+    <div id="stroll-locations" class="mb-12 scroll-mt-6">
+        <h2 class="text-3xl font-bold text-center text-swn-purple mb-3">Choose Your Stroll</h2>
+        <p class="text-center text-gray-600 mb-8">Our currently active stroll locations</p>
+        <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {% for location in locations %}
+            {% if location.id != 'ealing' %}
             <a href="{{ url_for('location', location_id=location.id) }}" class="card hover:shadow-xl transition-shadow cursor-pointer group">
                 <div class="h-32 rounded-lg mb-4 flex items-center justify-center border-4 bg-white
                     {% if location.id == 'city-of-london' %}border-purple-600 text-purple-600
-                    {% elif location.id == 'ealing' %}border-teal-500 text-teal-500
                     {% elif location.id == 'greenwich' %}border-pink-400 text-pink-400
                     {% endif %}">
                     <span class="text-3xl font-bold">{{ location.name }}</span>
@@ -207,7 +305,20 @@
                     View dates & register →
                 </div>
             </a>
+            {% endif %}
             {% endfor %}
+        </div>
+
+        <div class="max-w-4xl mx-auto mt-6 rounded-xl border-2 border-dashed border-amber-400 bg-amber-50 p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <span class="inline-flex self-start items-center whitespace-nowrap rounded-full bg-amber-200 px-3 py-1 text-sm font-bold text-amber-900">
+                    ⏸ Temporarily paused
+                </span>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">Ealing strolls</h3>
+                    <p class="text-gray-700 mt-1">Our Ealing strolls are temporarily paused while we find a new walk leader. City of London and Greenwich strolls are continuing as normal.</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -601,6 +712,71 @@
     } else {
         start();
     }
+})();
+</script>
+<script>
+(function () {
+    var ticker = document.getElementById('news-ticker');
+    var rotator = document.getElementById('news-ticker-rotator');
+    var controls = document.getElementById('news-ticker-controls');
+    if (!ticker || !rotator || !controls) return;
+
+    var items = Array.prototype.slice.call(rotator.querySelectorAll('.news-ticker-item'));
+    if (items.length <= 1 || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+
+    var current = 0;
+    var timer = null;
+    var explicitlyPaused = false;
+    var dots = items.map(function (_, index) {
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'news-ticker-dot' + (index === 0 ? ' is-active' : '');
+        dot.setAttribute('role', 'tab');
+        dot.setAttribute('aria-label', 'Show news item ' + (index + 1));
+        dot.addEventListener('click', function () { show(index); restart(); });
+        controls.appendChild(dot);
+        return dot;
+    });
+
+    var pause = document.createElement('button');
+    pause.type = 'button';
+    pause.className = 'news-ticker-pause';
+    pause.textContent = '⏸';
+    pause.setAttribute('aria-label', 'Pause news ticker');
+    controls.appendChild(pause);
+
+    function show(index) {
+        items.forEach(function (item, i) { item.classList.toggle('is-active', i === index); });
+        dots.forEach(function (dot, i) { dot.classList.toggle('is-active', i === index); });
+        current = index;
+    }
+    function next() { show((current + 1) % items.length); }
+    function previous() { show((current - 1 + items.length) % items.length); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    function start() { if (!explicitlyPaused) { stop(); timer = setInterval(next, 10000); } }
+    function restart() { stop(); start(); }
+
+    pause.addEventListener('click', function () {
+        explicitlyPaused = !explicitlyPaused;
+        pause.textContent = explicitlyPaused ? '▶' : '⏸';
+        pause.setAttribute('aria-label', explicitlyPaused ? 'Play news ticker' : 'Pause news ticker');
+        pause.classList.toggle('is-paused', explicitlyPaused);
+        explicitlyPaused ? stop() : start();
+    });
+    ticker.addEventListener('mouseenter', stop);
+    ticker.addEventListener('mouseleave', start);
+    ticker.addEventListener('focusin', stop);
+    ticker.addEventListener('focusout', start);
+
+    var touchStart = null;
+    ticker.addEventListener('touchstart', function (event) { touchStart = event.touches[0].clientX; }, { passive: true });
+    ticker.addEventListener('touchend', function (event) {
+        if (touchStart === null) return;
+        var delta = event.changedTouches[0].clientX - touchStart;
+        if (Math.abs(delta) > 40) { delta < 0 ? next() : previous(); restart(); }
+        touchStart = null;
+    }, { passive: true });
+    start();
 })();
 </script>
 {% endblock %}

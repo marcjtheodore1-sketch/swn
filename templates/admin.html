@@ -23,6 +23,64 @@
         </div>
     </div>
 
+    <!-- Homepage News Ticker -->
+    <section class="bg-white rounded-xl shadow-sm border border-purple-200 p-6 mb-8" aria-labelledby="news-ticker-heading">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+            <div>
+                <h2 id="news-ticker-heading" class="text-2xl font-bold text-swn-purple">📢 Homepage News Ticker</h2>
+                <p class="text-gray-600 mt-1">Manage the rotating “Latest News” banner. Changes go live immediately.</p>
+            </div>
+            <button type="button" id="news-ticker-toggle"
+                    class="self-start px-4 py-2 bg-purple-100 text-swn-purple rounded-lg hover:bg-purple-200 font-semibold"
+                    aria-expanded="false" aria-controls="news-ticker-admin">
+                Manage ticker
+            </button>
+        </div>
+
+        <div id="news-ticker-admin" class="hidden">
+            <div id="news-ticker-list" class="space-y-3 mb-7">
+                <p class="text-gray-500">Loading news items…</p>
+            </div>
+
+            <div class="border-t border-gray-200 pt-6">
+                <h3 id="news-item-form-title" class="text-xl font-bold text-gray-800 mb-4">Add News Item</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="news-emoji" class="block font-semibold text-gray-700 mb-1">Emoji <span class="font-normal text-gray-500">(optional)</span></label>
+                        <input id="news-emoji" type="text" maxlength="8" placeholder="📰"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="news-headline" class="block font-semibold text-gray-700 mb-1">Headline</label>
+                        <input id="news-headline" type="text" maxlength="240" placeholder="The bold opening text"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="news-details" class="block font-semibold text-gray-700 mb-1">Details <span class="font-normal text-gray-500">(optional)</span></label>
+                        <textarea id="news-details" rows="3" maxlength="2000" placeholder="Times, address or other useful information"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                    </div>
+                    <div>
+                        <label for="news-link-url" class="block font-semibold text-gray-700 mb-1">Link URL <span class="font-normal text-gray-500">(optional)</span></label>
+                        <input id="news-link-url" type="url" maxlength="1000" placeholder="https://…"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label for="news-link-text" class="block font-semibold text-gray-700 mb-1">Link text <span class="font-normal text-gray-500">(optional)</span></label>
+                        <input id="news-link-text" type="text" maxlength="160" placeholder="Read more →"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">For a clickable link, complete both the URL and link text.</p>
+                <div class="flex flex-wrap items-center gap-3 mt-4">
+                    <button type="button" id="news-item-save" class="px-5 py-2.5 bg-swn-purple text-white rounded-lg hover:bg-purple-700 font-semibold">Add News Item</button>
+                    <button type="button" id="news-item-cancel" class="hidden px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold">Cancel Edit</button>
+                    <span id="news-ticker-status" class="text-sm" role="status" aria-live="polite"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Stats - Registrations per Location -->
     <div class="grid md:grid-cols-4 gap-4 mb-8">
         <div class="bg-purple-600 text-white rounded-xl p-5 shadow-lg">
@@ -529,6 +587,178 @@
     for (var i = 0; i < btns.length; i++) {
         btns[i].addEventListener('click', onInviteClick);
     }
+})();
+</script>
+<script>
+(function () {
+    var panel = document.getElementById('news-ticker-admin');
+    var toggle = document.getElementById('news-ticker-toggle');
+    if (!panel || !toggle) return;
+
+    var list = document.getElementById('news-ticker-list');
+    var status = document.getElementById('news-ticker-status');
+    var saveButton = document.getElementById('news-item-save');
+    var cancelButton = document.getElementById('news-item-cancel');
+    var formTitle = document.getElementById('news-item-form-title');
+    var fields = {
+        emoji: document.getElementById('news-emoji'),
+        headline: document.getElementById('news-headline'),
+        details: document.getElementById('news-details'),
+        link_url: document.getElementById('news-link-url'),
+        link_text: document.getElementById('news-link-text')
+    };
+    var items = [];
+    var editingIndex = null;
+    var loaded = false;
+
+    toggle.addEventListener('click', function () {
+        var opening = panel.classList.contains('hidden');
+        panel.classList.toggle('hidden', !opening);
+        toggle.setAttribute('aria-expanded', String(opening));
+        toggle.textContent = opening ? 'Hide ticker settings' : 'Manage ticker';
+        if (opening && !loaded) loadItems();
+    });
+
+    function setStatus(message, error) {
+        status.textContent = message || '';
+        status.className = 'text-sm ' + (error ? 'text-red-600' : 'text-green-700');
+    }
+
+    function makeButton(label, className, handler, disabled, ariaLabel) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = label;
+        button.className = className + (disabled ? ' opacity-40 cursor-not-allowed' : '');
+        button.disabled = Boolean(disabled);
+        if (ariaLabel) button.setAttribute('aria-label', ariaLabel);
+        button.addEventListener('click', handler);
+        return button;
+    }
+
+    function renderItems() {
+        list.replaceChildren();
+        if (!items.length) {
+            var empty = document.createElement('p');
+            empty.className = 'text-gray-500 bg-gray-50 rounded-lg p-4';
+            empty.textContent = 'No news items. The ticker is hidden until you add one below.';
+            list.appendChild(empty);
+            return;
+        }
+        items.forEach(function (item, index) {
+            var row = document.createElement('div');
+            row.className = 'flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4';
+
+            var preview = document.createElement('p');
+            preview.className = 'text-gray-800 leading-relaxed min-w-0 break-words';
+            if (item.emoji) preview.appendChild(document.createTextNode(item.emoji + ' '));
+            if (item.headline) {
+                var strong = document.createElement('strong');
+                strong.textContent = item.headline;
+                preview.appendChild(strong);
+            }
+            if (item.details) preview.appendChild(document.createTextNode(' ' + item.details));
+            if (item.link_url && item.link_text) {
+                var link = document.createElement('span');
+                link.className = 'ml-1 font-semibold text-swn-purple';
+                link.textContent = '🔗 ' + item.link_text;
+                preview.appendChild(link);
+            }
+            row.appendChild(preview);
+
+            var actions = document.createElement('div');
+            actions.className = 'flex flex-wrap gap-2 shrink-0';
+            var secondary = 'px-3 py-1.5 border border-gray-300 bg-white text-gray-700 rounded hover:bg-gray-100 text-sm font-medium';
+            actions.appendChild(makeButton('↑', secondary, function () { move(index, -1); }, index === 0, 'Move item up'));
+            actions.appendChild(makeButton('↓', secondary, function () { move(index, 1); }, index === items.length - 1, 'Move item down'));
+            actions.appendChild(makeButton('Edit', secondary, function () { edit(index); }));
+            actions.appendChild(makeButton('Delete', 'px-3 py-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm font-medium', function () { remove(index); }));
+            row.appendChild(actions);
+            list.appendChild(row);
+        });
+    }
+
+    function loadItems() {
+        fetch('{{ url_for("admin_get_news_ticker") }}')
+            .then(function (response) { if (!response.ok) throw new Error(); return response.json(); })
+            .then(function (data) { items = data; loaded = true; renderItems(); })
+            .catch(function () { list.textContent = 'Could not load the news ticker. Please refresh and try again.'; setStatus('Failed to load.', true); });
+    }
+
+    function persist(message) {
+        return fetch('{{ url_for("admin_save_news_ticker") }}', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: items })
+        }).then(function (response) {
+            return response.json().then(function (data) {
+                if (!response.ok) throw new Error(data.error || 'Failed to save.');
+                items = data;
+                renderItems();
+                setStatus(message, false);
+            });
+        }).catch(function (error) {
+            setStatus(error.message || 'Failed to save. Please try again.', true);
+            loadItems();
+        });
+    }
+
+    function resetForm() {
+        editingIndex = null;
+        Object.keys(fields).forEach(function (key) { fields[key].value = ''; });
+        formTitle.textContent = 'Add News Item';
+        saveButton.textContent = 'Add News Item';
+        cancelButton.classList.add('hidden');
+    }
+
+    function edit(index) {
+        editingIndex = index;
+        Object.keys(fields).forEach(function (key) { fields[key].value = items[index][key] || ''; });
+        formTitle.textContent = 'Edit News Item';
+        saveButton.textContent = 'Save Changes';
+        cancelButton.classList.remove('hidden');
+        fields.headline.focus();
+        formTitle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function move(index, direction) {
+        var target = index + direction;
+        if (target < 0 || target >= items.length) return;
+        var item = items[index];
+        items[index] = items[target];
+        items[target] = item;
+        persist('Order updated.');
+    }
+
+    function remove(index) {
+        var label = items[index].headline || items[index].details || 'this news item';
+        if (!window.confirm('Delete “' + label + '”? It will disappear from the homepage immediately.')) return;
+        items.splice(index, 1);
+        resetForm();
+        persist('News item deleted.');
+    }
+
+    saveButton.addEventListener('click', function () {
+        var item = {};
+        Object.keys(fields).forEach(function (key) { item[key] = fields[key].value.trim(); });
+        if (!item.emoji && !item.headline && !item.details) {
+            setStatus('Please add at least a headline or message.', true);
+            return;
+        }
+        if ((item.link_url && !item.link_text) || (!item.link_url && item.link_text)) {
+            setStatus('A link needs both a URL and link text.', true);
+            return;
+        }
+        if (item.link_url && !/^https?:\/\//i.test(item.link_url)) {
+            setStatus('The link URL must start with http:// or https://.', true);
+            return;
+        }
+        var wasEditing = editingIndex !== null;
+        if (wasEditing) items[editingIndex] = item;
+        else items.push(item);
+        persist(wasEditing ? 'News item updated.' : 'News item added.');
+        resetForm();
+    });
+    cancelButton.addEventListener('click', function () { resetForm(); setStatus('', false); });
 })();
 </script>
 {% endblock %}

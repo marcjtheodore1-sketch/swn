@@ -14,6 +14,7 @@ import smtplib
 import threading
 import time
 import re
+import json
 
 # Basic email format check for manually-added invite recipients
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -28,7 +29,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///swn_bookings.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///swn_bookings.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Email configuration
@@ -187,6 +188,11 @@ class Registration(db.Model):
     cancelled_at = db.Column(db.DateTime, nullable=True)
     
     event = db.relationship('WalkEvent', backref='registrations')
+
+class Setting(db.Model):
+    """Small admin-managed site settings stored as text values."""
+    key = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.Text, nullable=False)
 
 # ============================================================================
 # EMAIL FUNCTIONS
@@ -904,6 +910,70 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Homepage news ticker — mirrors the admin-managed Fridays project banner.
+NEWS_TICKER_KEY = 'news_ticker_items'
+DEFAULT_NEWS_TICKER_ITEMS = [
+    {
+        'emoji': '📰',
+        'headline': 'Welcome to Strolling with Neurokin!',
+        'details': 'Gentle, inclusive strolls through London for the autism community.',
+        'link_url': '',
+        'link_text': '',
+    }
+]
+
+def _normalise_news_item(raw, new_id):
+    """Return a bounded, safe news item suitable for storage and display."""
+    raw = raw if isinstance(raw, dict) else {}
+    link_url = str(raw.get('link_url') or '').strip()[:1000]
+    link_text = str(raw.get('link_text') or '').strip()[:160]
+    if not re.match(r'^https?://', link_url, re.IGNORECASE) or not link_text:
+        link_url = ''
+        link_text = ''
+    return {
+        'id': new_id,
+        'emoji': str(raw.get('emoji') or '').strip()[:8],
+        'headline': str(raw.get('headline') or '').strip()[:240],
+        'details': str(raw.get('details') or '').strip()[:2000],
+        'link_url': link_url,
+        'link_text': link_text,
+    }
+
+def get_news_ticker_items():
+    """Return ordered ticker items, seeding a welcome item on first use."""
+    setting = db.session.get(Setting, NEWS_TICKER_KEY)
+    if setting is None:
+        items = [_normalise_news_item(item, i + 1)
+                 for i, item in enumerate(DEFAULT_NEWS_TICKER_ITEMS)]
+        db.session.add(Setting(key=NEWS_TICKER_KEY, value=json.dumps(items)))
+        db.session.commit()
+        return items
+    try:
+        raw_items = json.loads(setting.value)
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(raw_items, list):
+        return []
+    return [_normalise_news_item(item, i + 1)
+            for i, item in enumerate(raw_items[:20])]
+
+def save_news_ticker_items(raw_items):
+    """Validate and persist the complete ordered ticker list."""
+    cleaned = []
+    for raw in raw_items[:20]:
+        item = _normalise_news_item(raw, len(cleaned) + 1)
+        if not item['emoji'] and not item['headline'] and not item['details']:
+            continue
+        cleaned.append(item)
+
+    setting = db.session.get(Setting, NEWS_TICKER_KEY)
+    if setting is None:
+        setting = Setting(key=NEWS_TICKER_KEY, value='[]')
+        db.session.add(setting)
+    setting.value = json.dumps(cleaned)
+    db.session.commit()
+    return cleaned
+
 # ============================================================================
 # ROUTES
 # ============================================================================
@@ -916,7 +986,8 @@ def landing():
     # Get the next two upcoming advertised walks
     upcoming_walks = WalkEvent.query.filter(
         WalkEvent.walk_date >= today,
-        WalkEvent.is_advertised == True
+        WalkEvent.is_advertised == True,
+        WalkEvent.location_id.in_(['city-of-london', 'greenwich'])
     ).order_by(WalkEvent.walk_date).limit(2).all()
 
     # Next walk + its location details
@@ -934,6 +1005,7 @@ def landing():
     return render_template(
         'landing.html',
         locations=WALK_LOCATIONS,
+        news_ticker_items=get_news_ticker_items(),
         next_walk=next_walk,
         next_walk_location=next_walk_location,
         following_walk=following_walk,
@@ -1197,6 +1269,24 @@ def admin_dashboard():
             'total_registrations': total_registrations
         }
     )
+
+@app.route('/api/admin/news-ticker')
+@admin_required
+def admin_get_news_ticker():
+    """Return the ordered homepage news ticker items."""
+    return jsonify(get_news_ticker_items())
+
+@app.route('/api/admin/news-ticker', methods=['PUT'])
+@admin_required
+def admin_save_news_ticker():
+    """Replace the homepage news ticker with the submitted ordered list."""
+    data = request.get_json(silent=True) or {}
+    items = data.get('items')
+    if not isinstance(items, list):
+        return jsonify({'error': 'Expected an "items" list.'}), 400
+    if len(items) > 20:
+        return jsonify({'error': 'The news ticker supports up to 20 items.'}), 400
+    return jsonify(save_news_ticker_items(items))
 
 @app.route('/admin/logout')
 def admin_logout():
