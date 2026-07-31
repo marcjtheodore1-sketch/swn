@@ -187,13 +187,111 @@
                     </div>
 
                     <div>
-                        <label for="attending_with" class="block text-base font-semibold text-gray-800 mb-2">
-                            Will you be attending with anyone else (family member, carer, friend, etc.)?
-                        </label>
-                        <p class="text-sm text-gray-500 mb-2">If yes, please include their first name(s) so we can plan numbers accurately</p>
-                        <textarea id="attending_with" name="attending_with" rows="2" 
-                            class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple" 
-                            placeholder="Names of people attending with you (optional)"></textarea>
+                        <span class="block text-base font-semibold text-gray-800 mb-2">
+                            Will you be attending with anyone else (family member, carer, support worker, friend, etc.)? *
+                        </span>
+                        <div class="flex gap-3">
+                            <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-swn-purple has-[:checked]:border-swn-purple has-[:checked]:bg-purple-50">
+                                <input type="radio" name="attending_with_others" value="no" required
+                                    class="h-5 w-5 text-swn-purple focus:ring-swn-purple" data-attending-toggle>
+                                <span class="text-base font-medium text-gray-800">No</span>
+                            </label>
+                            <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-swn-purple has-[:checked]:border-swn-purple has-[:checked]:bg-purple-50">
+                                <input type="radio" name="attending_with_others" value="yes"
+                                    class="h-5 w-5 text-swn-purple focus:ring-swn-purple" data-attending-toggle>
+                                <span class="text-base font-medium text-gray-800">Yes</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Shown only when attending with someone else -->
+                    <div id="attending-with-details" class="hidden space-y-5 border-l-4 border-swn-purple bg-purple-50/50 rounded-r-lg p-5">
+                        <div>
+                            <label for="attending_with" class="block text-base font-semibold text-gray-800 mb-2">
+                                Who will be attending with you? *
+                            </label>
+                            <p class="text-sm text-gray-600 mb-2">Please give the full name of each person and their relationship to you (e.g. "Jane Smith — my mother"), so we can plan numbers accurately.</p>
+                            <textarea id="attending_with" name="attending_with" rows="3"
+                                class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                                placeholder="Full name and relationship for each person attending with you"></textarea>
+                        </div>
+
+                        <div>
+                            <span class="block text-base font-semibold text-gray-800 mb-2">
+                                Is one of them a carer or support worker? *
+                            </span>
+                            <div class="flex gap-3">
+                                <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg cursor-pointer hover:border-swn-purple has-[:checked]:border-swn-purple has-[:checked]:bg-purple-50">
+                                    <input type="radio" name="has_carer" value="no"
+                                        class="h-5 w-5 text-swn-purple focus:ring-swn-purple" data-carer-toggle>
+                                    <span class="text-base font-medium text-gray-800">No</span>
+                                </label>
+                                <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-gray-300 rounded-lg cursor-pointer hover:border-swn-purple has-[:checked]:border-swn-purple has-[:checked]:bg-purple-50">
+                                    <input type="radio" name="has_carer" value="yes"
+                                        class="h-5 w-5 text-swn-purple focus:ring-swn-purple" data-carer-toggle>
+                                    <span class="text-base font-medium text-gray-800">Yes</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Shown only when a carer or support worker is attending -->
+                        <div id="carer-details" class="hidden space-y-4 bg-white border-2 border-gray-200 rounded-lg p-4">
+                            <p class="text-sm text-gray-600">So we can contact them during the walk if needed, please give:</p>
+                            <div>
+                                <label for="carer_name" class="block text-base font-semibold text-gray-800 mb-2">
+                                    Carer / support worker's full name *
+                                </label>
+                                <input type="text" id="carer_name" name="carer_name"
+                                    class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                                    placeholder="Their full name">
+                            </div>
+                            <div>
+                                <label for="carer_organisation" class="block text-base font-semibold text-gray-800 mb-2">
+                                    Agency / organisation name *
+                                </label>
+                                <input type="text" id="carer_organisation" name="carer_organisation"
+                                    class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                                    placeholder="Their agency or organisation (write 'Independent' if not applicable)">
+                            </div>
+                            <div>
+                                <label for="carer_phone" class="block text-base font-semibold text-gray-800 mb-2">
+                                    Their mobile number *
+                                </label>
+                                <input type="tel" id="carer_phone" name="carer_phone"
+                                    class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                                    placeholder="07123 456789">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="responsible_person" class="block text-base font-semibold text-gray-800 mb-2">
+                                Who is responsible for each attendee during the walk? *
+                            </label>
+                            <p class="text-sm text-gray-600 mb-2">
+                                Please tell us who will be responsible for supervising whom — particularly where anyone attending
+                                is under 18, has higher support needs, may be vulnerable, or may require active supervision.
+                            </p>
+                            <textarea id="responsible_person" name="responsible_person" rows="3"
+                                class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-swn-purple focus:border-swn-purple"
+                                placeholder="e.g. I am responsible for my son Tom (16), who needs to be supervised at all times"></textarea>
+                        </div>
+
+                        <div class="bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
+                            <p class="font-bold text-amber-900 mb-2">Please read carefully</p>
+                            <ul class="text-sm text-amber-900 space-y-1.5 list-disc ml-4">
+                                <li>LAGC volunteers <strong>cannot act as substitute carers</strong>. They cannot provide personal care, behavioural support, or one-to-one supervision.</li>
+                                <li>Parents, carers and support workers <strong>remain fully responsible</strong> for actively supervising the person they attend with, for the whole walk.</li>
+                                <li>Failing to disclose relevant supervision or risk information may affect whether someone can attend future events.</li>
+                            </ul>
+                            <label class="flex items-start space-x-3 cursor-pointer mt-4 pt-4 border-t border-amber-300">
+                                <input type="checkbox" id="supervision_ack" name="supervision_ack" value="true"
+                                    class="mt-1 h-6 w-6 text-swn-purple rounded border-2 border-gray-400 focus:ring-swn-purple">
+                                <span class="text-base font-semibold text-amber-900">
+                                    I confirm I have read and understood the above, and that I remain responsible for
+                                    actively supervising the person I attend with. *
+                                </span>
+                            </label>
+                        </div>
                     </div>
 
                     <div>
@@ -245,4 +343,59 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var details    = document.getElementById('attending-with-details');
+    if (!details) return;   // no form on this page (no date selected)
+
+    var carerBlock = document.getElementById('carer-details');
+    var attendingRadios = document.querySelectorAll('[data-attending-toggle]');
+    var carerRadios     = document.querySelectorAll('[data-carer-toggle]');
+
+    // Fields that become required once their section is visible
+    var detailFields = ['attending_with', 'responsible_person', 'supervision_ack'];
+    var carerFields  = ['carer_name', 'carer_organisation', 'carer_phone'];
+
+    function setRequired(names, on) {
+        names.forEach(function (n) {
+            var el = document.getElementById(n);
+            if (el) { on ? el.setAttribute('required', 'required') : el.removeAttribute('required'); }
+        });
+    }
+
+    function syncCarer() {
+        var yes = document.querySelector('[data-carer-toggle][value="yes"]');
+        // Only relevant while the outer section is open
+        var on = !details.classList.contains('hidden') && yes && yes.checked;
+        carerBlock.classList.toggle('hidden', !on);
+        setRequired(carerFields, on);
+    }
+
+    function syncAttending() {
+        var yes = document.querySelector('[data-attending-toggle][value="yes"]');
+        var on = yes && yes.checked;
+        details.classList.toggle('hidden', !on);
+        setRequired(detailFields, on);
+        carerRadios.forEach(function (r) {
+            on ? r.setAttribute('required', 'required') : r.removeAttribute('required');
+        });
+        if (!on) {
+            // Clear the hidden answers so a changed mind doesn't submit stale details
+            carerRadios.forEach(function (r) { r.checked = false; });
+            detailFields.concat(carerFields).forEach(function (n) {
+                var el = document.getElementById(n);
+                if (!el) return;
+                if (el.type === 'checkbox') { el.checked = false; } else { el.value = ''; }
+            });
+        }
+        syncCarer();
+    }
+
+    attendingRadios.forEach(function (r) { r.addEventListener('change', syncAttending); });
+    carerRadios.forEach(function (r) { r.addEventListener('change', syncCarer); });
+
+    syncAttending();
+})();
+</script>
 {% endblock %}

@@ -95,6 +95,20 @@
                             <div class="text-sm text-green-700 bg-green-50 px-3 py-1 rounded-full inline-block">
                                 👥 {{ reg.attending_with }}
                             </div>
+                            {% if reg.has_carer == 'yes' %}
+                            <div class="mt-2 text-sm text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2">
+                                <div class="font-semibold">🧑‍⚕️ Carer / support worker</div>
+                                <div>{{ reg.carer_name }}</div>
+                                {% if reg.carer_organisation %}<div class="text-xs">{{ reg.carer_organisation }}</div>{% endif %}
+                                {% if reg.carer_phone %}<div class="text-xs">{{ reg.carer_phone }}</div>{% endif %}
+                            </div>
+                            {% endif %}
+                            {% if reg.responsible_person %}
+                            <div class="mt-2 text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                <span class="font-semibold">🛡️ Responsible:</span> {{ reg.responsible_person }}
+                                {% if reg.supervision_ack %}<div class="text-xs text-green-700 mt-1">✓ Supervision responsibility confirmed</div>{% endif %}
+                            </div>
+                            {% endif %}
                             {% else %}
                             <span class="text-gray-400 text-sm">—</span>
                             {% endif %}

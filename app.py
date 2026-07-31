@@ -173,8 +173,17 @@ class Registration(db.Model):
     access_needs = db.Column(db.Text, nullable=True)
     dietary_needs = db.Column(db.Text, nullable=True)
     
+    # Attending with others, and the supervision/safeguarding details that go with it
+    attending_with_others = db.Column(db.String(10), nullable=True)   # 'yes' / 'no'
+    attending_with = db.Column(db.Text, nullable=True)                # names of those attending
+    has_carer = db.Column(db.String(10), nullable=True)               # 'yes' / 'no'
+    carer_name = db.Column(db.String(200), nullable=True)
+    carer_organisation = db.Column(db.String(200), nullable=True)
+    carer_phone = db.Column(db.String(50), nullable=True)
+    responsible_person = db.Column(db.Text, nullable=True)
+    supervision_ack = db.Column(db.Boolean, default=False)
+
     # Additional info
-    attending_with = db.Column(db.Text, nullable=True)
     additional_info = db.Column(db.Text, nullable=True)
     
     # WhatsApp consent
@@ -482,7 +491,13 @@ Date: {registration.event.walk_date.strftime('%A, %d %B %Y')}
 Time: {registration.event.start_time} - {registration.event.end_time}
 Walk Leader: {location['facilitator']}
 
+Attending with others: {'Yes' if registration.attending_with_others == 'yes' else 'No'}
 Attending with: {registration.attending_with or 'N/A'}
+{f'''Carer/support worker: {registration.carer_name or 'N/A'}
+  Organisation: {registration.carer_organisation or 'N/A'}
+  Mobile: {registration.carer_phone or 'N/A'}
+''' if registration.has_carer == 'yes' else ''}Responsible for attendee: {registration.responsible_person or 'N/A'}
+Supervision responsibility accepted: {'Yes' if registration.supervision_ack else 'N/A'}
 Access needs: {registration.access_needs or 'None'}
 Dietary needs: {registration.dietary_needs or 'None'}
 WhatsApp consent: {'Yes' if registration.whatsapp_consent else 'No'}
@@ -1063,6 +1078,17 @@ def register(event_id):
         flash('You have already registered for this walk with this email address', 'error')
         return redirect(url_for('location', location_id=event.location_id, event=event_id))
     
+    # Supervision details only apply when someone is attending with others,
+    # and carer details only when one of those people is a carer/support worker.
+    attending_with_others = request.form.get('attending_with_others')
+    bringing_others = attending_with_others == 'yes'
+    has_carer = request.form.get('has_carer') if bringing_others else None
+    with_carer = bringing_others and has_carer == 'yes'
+
+    if bringing_others and not request.form.get('supervision_ack'):
+        flash('Please confirm you understand the supervision responsibilities before registering', 'error')
+        return redirect(url_for('location', location_id=event.location_id, event=event_id))
+
     # Create registration
     registration = Registration(
         event_id=event_id,
@@ -1071,7 +1097,14 @@ def register(event_id):
         phone=request.form.get('phone'),
         access_needs=request.form.get('access_needs'),
         dietary_needs=request.form.get('dietary_needs'),
-        attending_with=request.form.get('attending_with'),
+        attending_with_others=attending_with_others,
+        attending_with=request.form.get('attending_with') if bringing_others else None,
+        has_carer=has_carer,
+        carer_name=request.form.get('carer_name') if with_carer else None,
+        carer_organisation=request.form.get('carer_organisation') if with_carer else None,
+        carer_phone=request.form.get('carer_phone') if with_carer else None,
+        responsible_person=request.form.get('responsible_person') if bringing_others else None,
+        supervision_ack=bringing_others and request.form.get('supervision_ack') == 'true',
         additional_info=request.form.get('additional_info'),
         whatsapp_consent=request.form.get('whatsapp_consent') == 'true'
     )
@@ -1586,18 +1619,27 @@ def admin_event_registrations_csv(event_id):
     
     # Header row
     writer.writerow([
-        'Name', 'Email', 'Phone', 'Attending With', 
+        'Name', 'Email', 'Phone', 'Attending With Others', 'Attending With',
+        'Carer/Support Worker', 'Carer Name', 'Carer Organisation', 'Carer Mobile',
+        'Responsible For Attendee', 'Supervision Confirmed',
         'Access Needs', 'Dietary Needs', 'Additional Info',
         'WhatsApp Consent', 'Registered At'
     ])
-    
+
     # Data rows
     for reg in registrations:
         writer.writerow([
             reg.name,
             reg.email,
             reg.phone,
+            'Yes' if reg.attending_with_others == 'yes' else 'No',
             reg.attending_with or '',
+            'Yes' if reg.has_carer == 'yes' else ('No' if reg.has_carer else ''),
+            reg.carer_name or '',
+            reg.carer_organisation or '',
+            reg.carer_phone or '',
+            reg.responsible_person or '',
+            'Yes' if reg.supervision_ack else '',
             reg.access_needs or '',
             reg.dietary_needs or '',
             reg.additional_info or '',
@@ -1657,8 +1699,39 @@ def admin_cancel_registration(registration_id):
 # INITIALIZATION
 # ============================================================================
 
+def ensure_schema():
+    """Add columns introduced after a database was first created.
+
+    db.create_all() only creates missing tables, never missing columns, so
+    new Registration fields have to be added to existing databases by hand.
+    Idempotent: each column is only added when it isn't already there.
+    """
+    inspector = db.inspect(db.engine)
+    if 'registration' not in inspector.get_table_names():
+        return
+
+    existing = {c['name'] for c in inspector.get_columns('registration')}
+    additions = [
+        ('attending_with_others', 'VARCHAR(10)'),
+        ('has_carer',             'VARCHAR(10)'),
+        ('carer_name',            'VARCHAR(200)'),
+        ('carer_organisation',    'VARCHAR(200)'),
+        ('carer_phone',           'VARCHAR(50)'),
+        ('responsible_person',    'TEXT'),
+        ('supervision_ack',       'BOOLEAN'),
+    ]
+    for column, coltype in additions:
+        if column not in existing:
+            db.session.execute(db.text(
+                f'ALTER TABLE registration ADD COLUMN {column} {coltype}'
+            ))
+            print(f'[SCHEMA] Added registration.{column}')
+    db.session.commit()
+
+
 with app.app_context():
     db.create_all()
+    ensure_schema()
     init_events()
 
 if __name__ == '__main__':
