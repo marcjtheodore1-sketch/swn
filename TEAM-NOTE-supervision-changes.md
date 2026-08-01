@@ -83,7 +83,8 @@ someone's carer during the walk, you don't want to be logging into a website to 
 - If anyone is in danger or needs urgent medical help, **call 999**.
 
 **Afterwards**, write down what actually happened as soon as you can — what you *saw and
-did*, not conclusions about the person. Then **tell Chris**, who will follow it up properly.
+did*, not conclusions about the person. Then **tell Chris and Kirsty** — Chris is our Designated
+Safeguarding Lead and Kirsty is our internal safeguarding expert. They'll follow it up properly.
 
 A reminder of this is now at the top of the admin dashboard, so it's there when you need it
 rather than filed away in a document nobody can find.
@@ -96,7 +97,7 @@ If someone turns up needing more support than we can give, that is **not a failu
 part**, and it is **not yours to fix on the day**. Everyone is told before they book what we
 can and can't offer. You are never obliged to fill that gap.
 
-Do what's kind and reasonable, keep everyone safe, and pass it on to Chris afterwards.
+Do what's kind and reasonable, keep everyone safe, and pass it on to Chris and Kirsty afterwards.
 
 Thank you — genuinely — for everything you do on these walks. This is about protecting you
 as much as anyone.
