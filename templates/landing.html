@@ -664,7 +664,8 @@
         "Thanks for a lovely walk. I really enjoyed spending time with everyone today.",
         "Thanks so much for the lovely walk — we both enjoyed it very much! x",
         "Thank you for a great day! Even though it was cold, I had a great time walking around with all of you. See you all in a few weeks 🤗",
-        "It was so lovely seeing all of you. Thank you so much for organising the walk — it's definitely a great initiative!"
+        "It was so lovely seeing all of you. Thank you so much for organising the walk — it's definitely a great initiative!",
+        "Nice stroll in an area I didn’t previously know, with a big lake of which I didn’t know the existence, with several species of birds in it. We saw works of art along the way, so I learned a lot of new things, which is always good. The charity even paid for coffee or ice cream for everyone. Everybody who attended was new to me, so I met a lot of new, very nice, relatable people as well. All good, I will be back again for the next one"
     ];
 
     var qEl     = document.getElementById('swn-tq');
@@ -707,7 +708,10 @@
 
     function start() {
         if (timer) clearInterval(timer);
-        timer = setInterval(next, INTERVAL);
+        timer = setTimeout(function advance() {
+            next();
+            timer = setTimeout(advance, quotes[i].length > 250 ? 20000 : INTERVAL);
+        }, quotes[i].length > 250 ? 20000 : INTERVAL);
         playing = true;
         pauseBtn.textContent = '⏸ Pause';
         pauseBtn.setAttribute('aria-label', 'Pause auto-play');
