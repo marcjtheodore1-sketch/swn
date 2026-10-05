@@ -876,7 +876,7 @@ def init_events():
         # City of London sessions - 1st Sunday of every month starting May 2026
         city_dates = [
             '2026-05-03', '2026-06-07', '2026-07-05', '2026-08-02',
-            '2026-09-06', '2026-10-04', '2026-11-01', '2026-12-07',
+            '2026-09-06', '2026-10-04', '2026-11-01', '2026-12-06',
         ]
         
         for date_str in city_dates:
