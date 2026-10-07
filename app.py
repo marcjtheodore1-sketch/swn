@@ -25,8 +25,10 @@ from email import encoders
 from ics import Calendar, Event as ICSEvent
 from ics.alarm import DisplayAlarm
 
+from session_security import load_session_secret
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(16))
+app.config['SECRET_KEY'] = load_session_secret(app.instance_path)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///swn_bookings.db')
@@ -921,6 +923,8 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('admin_logged_in'):
+            if request.endpoint in ('admin_invite_preview', 'admin_send_invites'):
+                return jsonify({'error': 'Your admin session has expired. Sign in again, then reopen the invitation.'}), 401
             return redirect(url_for('admin_login'))
         return f(*args, **kwargs)
     return decorated_function

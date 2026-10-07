@@ -557,7 +557,15 @@
         subjEl.focus();
 
         fetch('/admin/event/' + ctx.eventId + '/invite-preview?audience=' + ctx.audience)
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (r.redirected || r.status === 401) {
+                    throw new Error('Your admin session has expired. Sign in again, then reopen the invitation.');
+                }
+                if (!(r.headers.get('Content-Type') || '').includes('application/json')) {
+                    throw new Error('The server could not load the invitation. Refresh the page and try again.');
+                }
+                return r.json();
+            })
             .then(function (d) {
                 if (d.error) { warnEl.textContent = d.error; return; }
                 preview = d;
@@ -568,9 +576,9 @@
                 renderRecipients();
                 renderWarning();
             })
-            .catch(function () {
+            .catch(function (error) {
                 warnEl.className = 'rounded-lg p-4 mb-5 text-sm bg-red-50 text-red-700 border border-red-300';
-                warnEl.textContent = 'Could not load the preview. Please close and try again.';
+                warnEl.textContent = error.message || 'Could not load the preview. Refresh the page and try again.';
             });
     }
 
