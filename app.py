@@ -59,6 +59,14 @@ app.config['TESTIMONIAL_EMAIL'] = os.environ.get('TESTIMONIAL_EMAIL', 'contact@l
 app.config['INVITE_TEST_MODE'] = os.environ.get('INVITE_TEST_MODE', 'true').lower() == 'true'
 app.config['INVITE_TEST_EMAIL'] = os.environ.get('INVITE_TEST_EMAIL', 'londonautismgroupcharity@gmail.com')
 
+# Permanent attendance exclusions, including known alternative email addresses.
+_default_banned_emails = {'zara.lagc@gmail.com', 'salih.zara@gmail.com'}
+app.config['BANNED_ATTENDEE_EMAILS'] = _default_banned_emails | {
+    email.strip().lower()
+    for email in os.environ.get('BANNED_ATTENDEE_EMAILS', '').split(',')
+    if email.strip()
+}
+
 db = SQLAlchemy(app)
 
 # ============================================================================
@@ -793,7 +801,7 @@ def get_invite_recipients(event, audience):
         for reg in Registration.query.filter_by(event_id=event.id, cancelled_at=None).all()
         if reg.email
     }
-    return sorted(emails - already)
+    return sorted(emails - already - app.config['BANNED_ATTENDEE_EMAILS'])
 
 def build_invite_draft(event, location, audience):
     """Build the default (editable) subject + body for an invite email."""
@@ -1076,7 +1084,10 @@ def register(event_id):
         return redirect(url_for('location', location_id=event.location_id))
     
     # Check if email already registered for this event
-    email = request.form.get('email')
+    email = (request.form.get('email') or '').strip().lower()
+    if email in app.config['BANNED_ATTENDEE_EMAILS']:
+        flash('This email address is not permitted to register for SwN strolls.', 'error')
+        return redirect(url_for('location', location_id=event.location_id, event=event_id))
     existing = Registration.query.filter_by(event_id=event_id, email=email, cancelled_at=None).first()
     if existing:
         flash('You have already registered for this walk with this email address', 'error')
@@ -1479,12 +1490,25 @@ def admin_send_invites(event_id):
         if not EMAIL_RE.match(addr):
             invalid.append(raw)
             continue
+        if addr in app.config['BANNED_ATTENDEE_EMAILS']:
+            return jsonify({'error': 'This email address is not permitted to receive SwN invitations.'}), 400
         if addr not in seen:
             seen.add(addr)
             recipients.append(addr)
 
     if invalid:
         return jsonify({'error': 'These addresses are not valid email addresses: ' + ', '.join(invalid)}), 400
+
+    # Honour the exact reviewed list. Newly added registrations must not silently
+    # expand an invitation after its preview was opened.
+    if 'recipient_emails' in data:
+        selected = data['recipient_emails']
+        if not isinstance(selected, list) or any(not isinstance(email, str) for email in selected):
+            return jsonify({'error': 'The recipient selection is invalid. Reopen the invitation.'}), 400
+        selected = {email.strip().lower() for email in selected}
+        recipients = [email for email in recipients if email in selected]
+    if not recipients:
+        return jsonify({'error': 'There are no recipients to email. Add at least one address.'}), 400
 
     would_count = len(recipients)
 
@@ -1733,10 +1757,20 @@ def ensure_schema():
     db.session.commit()
 
 
+def purge_banned_attendee_data():
+    """Remove all registrations for permanently excluded addresses."""
+    deleted = Registration.query.filter(
+        db.func.lower(db.func.trim(Registration.email)).in_(app.config['BANNED_ATTENDEE_EMAILS'])
+    ).delete(synchronize_session=False)
+    db.session.commit()
+    return deleted
+
+
 with app.app_context():
     db.create_all()
     ensure_schema()
     init_events()
+    purge_banned_attendee_data()
 
 if __name__ == '__main__':
     app.run(debug=True)

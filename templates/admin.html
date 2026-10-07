@@ -418,10 +418,13 @@
     var ctx = { eventId: null, audience: null };
     var preview = null;
     var addedEmails = [];
+    var removedEmails = [];
     var trigger = null;
 
     function autoRecipients() {
-        return (preview && preview.recipients) ? preview.recipients : [];
+        return ((preview && preview.recipients) ? preview.recipients : []).filter(function (email) {
+            return removedEmails.indexOf(email) === -1;
+        });
     }
     function totalCount() {
         return autoRecipients().length + addedEmails.length;
@@ -449,35 +452,33 @@
 
     function renderRecipients() {
         recipList.innerHTML = '';
-        autoRecipients().forEach(function (em) {
+        function appendRecipient(em, added) {
             var li = document.createElement('li');
-            li.className = 'px-3 py-1.5 break-all';
-            li.textContent = em;
-            recipList.appendChild(li);
-        });
-        addedEmails.forEach(function (em, idx) {
-            var li = document.createElement('li');
-            li.className = 'px-3 py-1.5 break-all flex items-center justify-between gap-2 bg-purple-50';
+            li.className = 'px-3 py-1.5 break-all flex items-center justify-between gap-2' + (added ? ' bg-purple-50' : '');
             var span = document.createElement('span');
-            span.textContent = em + '  (added)';
+            span.textContent = em + (added ? '  (added)' : '');
             var rm = document.createElement('button');
             rm.type = 'button';
-            rm.className = 'text-red-500 hover:text-red-700 text-xl leading-none flex-shrink-0';
+            rm.className = 'text-red-600 hover:text-red-800 text-sm font-semibold flex-shrink-0 px-2 py-1';
             rm.setAttribute('aria-label', 'Remove ' + em);
-            rm.textContent = '×';
+            rm.textContent = 'Remove';
             rm.addEventListener('click', function () {
-                addedEmails.splice(idx, 1);
+                if (added) addedEmails = addedEmails.filter(function (value) { return value !== em; });
+                else removedEmails.push(em);
                 renderRecipients();
                 renderWarning();
             });
             li.appendChild(span);
             li.appendChild(rm);
             recipList.appendChild(li);
-        });
+        }
+        autoRecipients().forEach(function (em) { appendRecipient(em, false); });
+        addedEmails.forEach(function (em) { appendRecipient(em, true); });
         recipCount.textContent = '(' + totalCount() + ')';
-        recipNote.textContent = preview.test_mode
-            ? 'In TEST MODE only ' + preview.test_email + ' actually receives the email — the list above is who it would reach in live mode.'
-            : 'Each person listed above will receive one email.';
+        recipNote.textContent = (preview.test_mode
+            ? 'In TEST MODE only ' + preview.test_email + ' actually receives the email.'
+            : 'Each person listed above will receive one email.') +
+            ' Remove excludes someone from this invitation only; it does not delete their attendance records.';
         recipWrap.classList.remove('hidden');
     }
 
@@ -546,6 +547,7 @@
         recipWrap.classList.add('hidden');
         recipList.innerHTML = '';
         addedEmails = [];
+        removedEmails = [];
         addInput.value = '';
         addError.classList.add('hidden');
         subjEl.value = '';
@@ -602,7 +604,8 @@
                 audience: ctx.audience,
                 subject: subjEl.value.trim(),
                 body: bodyEl.value,
-                extra_emails: addedEmails
+                extra_emails: addedEmails,
+                recipient_emails: autoRecipients().concat(addedEmails)
             })
         }).then(function (r) {
             return r.json().then(function (d) { return { ok: r.ok, data: d }; });
