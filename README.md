@@ -62,6 +62,6 @@ python -c "from app import app, db, init_events; app.app_context().push(); db.cr
 - Password: `Moonlight` (or your custom password)
 
 ## Walks Configured
-- **Greenwich**: 2nd Sunday monthly, 11:10am-1:10pm (Eoin Little)
+- **Greenwich**: 2nd Sunday monthly, assemble at 12.50pm, walk 1.10pm-3.10pm (Eoin Little; new times from November 2026)
 - **City of London**: 1st Sunday monthly, 1:30pm-3:30pm (Hazel East)
 - **Ealing**: Specific dates, 2:00pm-4:00pm (Zara Salih)

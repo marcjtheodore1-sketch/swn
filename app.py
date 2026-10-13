@@ -863,12 +863,12 @@ def init_events():
             ('2026-08-09', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
             ('2026-09-13', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
             ('2026-10-11', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2026-11-08', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2026-12-13', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2027-01-10', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2027-02-14', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2027-03-14', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
-            ('2027-04-11', '11:10', '13:10', 'Route to be confirmed - details will be sent upon registration'),
+            ('2026-11-08', '13:10', '15:10', 'Assemble at 12.50pm. The walk starts at 1.10pm. Route to be confirmed - details will be sent upon registration'),
+            ('2026-12-13', '13:10', '15:10', 'Assemble at 12.50pm. The walk starts at 1.10pm. Route to be confirmed - details will be sent upon registration'),
+            ('2027-01-10', '13:10', '15:10', 'Assemble at 12.50pm. The walk starts at 1.10pm. Route to be confirmed - details will be sent upon registration'),
+            ('2027-02-14', '13:10', '15:10', 'Assemble at 12.50pm. The walk starts at 1.10pm. Route to be confirmed - details will be sent upon registration'),
+            ('2027-03-14', '13:10', '15:10', 'Assemble at 12.50pm. The walk starts at 1.10pm. Route to be confirmed - details will be sent upon registration'),
+            ('2027-04-11', '13:10', '15:10', 'Assemble at 12.50pm. The walk starts at 1.10pm. Route to be confirmed - details will be sent upon registration'),
         ]
         
         for date_str, start, end, meeting in greenwich_dates:
